@@ -1,12 +1,9 @@
-<script lang="ts">
-export const description
-  = "A sidebar that collapses to icons."
-export const iframeHeight = "800px"
-export const containerClass = "w-full h-full"
-</script>
-
 <script setup lang="ts">
-import AppSidebar from "@/components/shell/AppSidebar.vue"
+import { computed } from 'vue'
+import { useRoute, RouterView } from 'vue-router'
+
+import AppSidebar from '@/components/shell/AppSidebar.vue';
+
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -15,12 +12,20 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { Separator } from "@/components/ui/separator"
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar"
+import Separator from '@/components/ui/separator/Separator.vue';
+import SidebarTrigger from '@/components/ui/sidebar/SidebarTrigger.vue';
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
+
+import ThemeToggle from '@/components/shell/tooltip/ThemeToggle.vue';
+import RegisterToggle from '@/components/shell/tooltip/RegisterToggle.vue';
+import NotificationToggle from '@/components/shell/tooltip/NotificationToggle.vue';
+
+const route = useRoute()
+
+const breadcrumbs = computed(() => {
+  return (route.meta.breadcrumb as Array<{ label: string; to?: string }>) ?? []
+})
+
 </script>
 
 <template>
@@ -36,27 +41,30 @@ import {
           />
           <Breadcrumb>
             <BreadcrumbList>
-              <BreadcrumbItem class="hidden md:block">
-                <BreadcrumbLink href="#">
-                  Building Your Application
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator class="hidden md:block" />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Data Fetching</BreadcrumbPage>
-              </BreadcrumbItem>
+              <template v-for="(item, index) in breadcrumbs" :key="index">
+                <BreadcrumbItem>
+                  <BreadcrumbLink v-if="item.to && index < breadcrumbs.length - 1" :href="item.to">
+                    {{ item.label }}
+                  </BreadcrumbLink>
+
+                  <BreadcrumbPage v-else>
+                    {{ item.label }}
+                  </BreadcrumbPage>
+                </BreadcrumbItem>
+
+                <BreadcrumbSeparator v-if="index < breadcrumbs.length - 1" />
+              </template>
             </BreadcrumbList>
           </Breadcrumb>
         </div>
-      </header>
-      <div class="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <div class="grid auto-rows-min gap-4 md:grid-cols-3">
-          <div class="bg-muted/50 aspect-video rounded-xl" />
-          <div class="bg-muted/50 aspect-video rounded-xl" />
-          <div class="bg-muted/50 aspect-video rounded-xl" />
+
+        <div class="ml-auto flex items-center gap-1 rounded-lg mx-3 border bg-background/80">
+          <RegisterToggle />
+          <NotificationToggle />
+          <ThemeToggle />
         </div>
-        <div class="bg-muted/50 min-h-screen flex-1 rounded-xl md:min-h-min" />
-      </div>
+      </header>
+      <RouterView />
     </SidebarInset>
   </SidebarProvider>
 </template>

@@ -1,7 +1,18 @@
 import { createRouter, createWebHistory } from "vue-router";
 
 const routes = [
-  { path: '/', component: () => import('./pages/Shell.vue'), meta: { title: 'GeoPlant - Home' } },
+  {
+    path: '/',
+    component: () => import('./pages/Shell.vue'),
+    meta: {
+      breadcrumb: [
+        { label: 'Atlas', to: '/' }
+      ],
+      title: [
+        'GeoPlant - Atlas'
+      ]
+    }
+  },
 ]
 
 const router = createRouter({
