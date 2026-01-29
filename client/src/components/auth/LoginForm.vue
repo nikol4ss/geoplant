@@ -25,7 +25,7 @@ const props = defineProps<{
   <div :class="cn('flex flex-col gap-6', props.class)">
     <Card class="overflow-hidden p-0 rounded-lg">
       <CardContent class="grid p-0 md:grid-cols-2">
-        <form class="p-6 md:p-10">
+        <form class="p-6 md:p-8">
           <FieldGroup>
             <div class="flex flex-col items-center gap-2 text-center">
               <h1 class="text-2xl font-bold">Welcome <span class="text-primary">GeoPlant</span></h1>
@@ -49,6 +49,14 @@ const props = defineProps<{
             </Field>
 
             <FieldSeparator class="*:data-[slot=field-separator-content]:bg-card">
+              or
+            </FieldSeparator>
+
+            <Field>
+              <Button type="submit"> Continue as Nikolas Campos </Button>
+            </Field>
+
+            <FieldSeparator class="*:data-[slot=field-separator-content]:bg-card">
               Don't have an account?
             </FieldSeparator>
 
@@ -57,7 +65,7 @@ const props = defineProps<{
             </FieldDescription>
           </FieldGroup>
         </form>
-        <div class="bg-muted relative hidden md:flex items-center justify-center">
+        <div class="bg-muted/70 relative hidden md:flex items-center justify-center">
           <img src="@/assets/geoplant.png" alt="logo" class="size-35 object-contain" />
         </div>
       </CardContent>
