@@ -1,18 +1,19 @@
 import Fastify from 'fastify';
-import type { FastifyReply, FastifyRequest } from 'fastify';
-
 import cors from '@fastify/cors';
-
 import dotenv from 'dotenv';
-
-import pino from 'pino';
+import crypto from 'crypto';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 
 dotenv.config();
 
-const logger = pino({
-  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-  transport:
-    process.env.NODE_ENV === 'production'
+const isProd = process.env.NODE_ENV === 'production';
+
+const app = Fastify({
+  genReqId: () => crypto.randomUUID(),
+  disableRequestLogging: true,
+  logger: {
+    level: isProd ? 'info' : 'debug',
+    transport: isProd
       ? undefined
       : {
           target: 'pino-pretty',
@@ -22,96 +23,87 @@ const logger = pino({
             ignore: 'pid,hostname',
           },
         },
+  },
 });
 
-const app = Fastify({ logger: false });
-
-// CORS
 app.register(cors, { origin: '*' });
 
-// Hooks
-app.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
-  (request as any).startTime = Date.now();
-
-  logger.info(
-    {
+app.addHook('preHandler', async (request: FastifyRequest) => {
+  if (!isProd) {
+    request.log.debug({
+      reqId: request.id,
       method: request.method,
       url: request.url,
-      headers: request.headers,
-      remoteAddress: request.ip,
-    },
-    'Request Start',
-  );
-});
-
-app.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
-  if (['POST', 'PUT', 'DELETE'].includes(request.method)) {
-    logger.info(
-      {
-        method: request.method,
-        url: request.url,
-        body: request.body,
+      body: request.body,
+      headers: {
+        'content-type': request.headers['content-type'],
+        authorization: request.headers.authorization ? '***' : undefined,
       },
-      'Request Body',
-    );
+    });
   }
 });
 
 app.addHook('onResponse', async (request: FastifyRequest, reply: FastifyReply) => {
-  const responseTime = Date.now() - ((request as any).startTime || Date.now());
-  const logData = {
+  const status = reply.statusCode;
+
+  const data = {
+    reqId: request.id,
     method: request.method,
     url: request.url,
-    status: reply.statusCode,
-    responseTime: `${responseTime}ms`,
+    status,
+    responseTimeMs: reply.elapsedTime,
+    remoteAddress: request.ip,
   };
 
-  if (reply.statusCode >= 500) logger.error(logData, 'Server Error');
-  else if (reply.statusCode >= 400) logger.warn(logData, 'Client Error');
-  else logger.info(logData, 'Request Completed');
-});
-
-app.addHook('onSend', async (request: FastifyRequest, reply: FastifyReply, payload: any) => {
-  if (['POST', 'PUT', 'DELETE'].includes(request.method)) {
-    logger.info(
-      {
-        method: request.method,
-        url: request.url,
-        status: reply.statusCode,
-        responseBody: payload,
-      },
-      'Response Body',
-    );
+  if (status >= 500) {
+    request.log.error({ ...data, type: 'SERVER_ERROR' });
+  } else if (status >= 400) {
+    request.log.warn({ ...data, type: 'CLIENT_ERROR' });
+  } else {
+    request.log.info(data);
   }
-  return payload;
 });
 
-app.setErrorHandler((error: Error, request: FastifyRequest, reply: FastifyReply) => {
-  logger.error(
-    {
-      method: request.method,
-      url: request.url,
+app.setErrorHandler((error: unknown, request: FastifyRequest, reply: FastifyReply) => {
+  if (error instanceof Error) {
+    request.log.error({
+      reqId: request.id,
+      type: 'SERVER_ERROR',
       message: error.message,
       stack: error.stack,
-    },
-    'Unhandled Exception',
-  );
+    });
+  } else {
+    request.log.error({
+      reqId: request.id,
+      type: 'SERVER_ERROR',
+      error,
+    });
+  }
 
-  reply.status(500).send({ error: 'Internal Server Error', message: error.message });
+  reply.status(500).send({
+    error: 'SERVER_ERROR',
+    requestId: request.id,
+  });
 });
 
-// Routes
+
 app.get('/ping', async () => ({
   status: 'pong',
   timestamp: new Date().toISOString(),
 }));
 
-const start = async () => {
+const start = async (): Promise<void> => {
   try {
-    await app.listen({ port: Number(process.env.PORT) || 3000, host: '0.0.0.0' });
-    logger.info(`Server running on port ${process.env.PORT || 3000}`);
-  } catch (err) {
-    logger.error(err, 'Failed to start server');
+    await app.listen({
+      port: Number(process.env.PORT) || 3000,
+      host: '0.0.0.0',
+    });
+  } catch (err: unknown) {
+    app.log.fatal(
+      err instanceof Error
+        ? { message: err.message, stack: err.stack }
+        : { err },
+    );
     process.exit(1);
   }
 };
