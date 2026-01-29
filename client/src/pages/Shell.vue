@@ -58,7 +58,7 @@ const breadcrumbs = computed(() => {
           </Breadcrumb>
         </div>
 
-        <div class="ml-auto flex items-center gap-1 rounded-lg mx-3 border bg-background/80">
+        <div class="ml-auto flex items-center gap-1 rounded-lg mx-4 border bg-background/80">
           <RegisterToggle />
           <NotificationToggle />
           <ThemeToggle />

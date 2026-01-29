@@ -3,31 +3,51 @@ import { createRouter, createWebHistory } from "vue-router";
 const routes = [
   {
     path: '/',
-    component: () => import('./pages/Shell.vue'),
+    redirect: '/auth/login'
+  },
+  {
+    path: '/auth/login',
+    component: () => import('./pages/Login.vue'),
     meta: {
-      breadcrumb: [
-        { label: 'Atlas', to: '/' }
-      ],
-      title: [
-        'GeoPlant - Atlas'
-      ]
+      public: true,
+      title: 'GeoPlant - Login'
     }
   },
-]
+  {
+    path: '/auth/signup',
+    component: () => import('./pages/Signup.vue'),
+    meta: {
+      public: true,
+      title: 'GeoPlant - Signup'
+    }
+  },
+  {
+    path: '/atlas',
+    component: () => import('./pages/Shell.vue'),
+    meta: {
+      requiresAuth: true,
+      breadcrumb: [{ label: 'Atlas', to: '/atlas' }],
+      title: 'GeoPlant - Atlas'
+    },
+    children: [
+      {
+        path: '',
+        component: () => import('./pages/Atlas.vue')
+      },
+      {
+        path: '/catalog',
+        component: () => import('./pages/Catalog.vue'),
+        meta: {
+          breadcrumb: [{ label: 'Catalog', to: '/atlas/catalog' }],
+          title: 'GeoPlant - Catalog'
+        }
+      }
+    ]
+  }
+];
 
-const router = createRouter({
+export default createRouter({
   history: createWebHistory(),
   routes,
 });
 
-router.beforeEach((to, _from, next) => {
-  const token = localStorage.getItem('token');
-
-  if (to.meta.requiresAuth && !token) {
-    return next('/');
-  }
-
-  next();
-});
-
-export default router;

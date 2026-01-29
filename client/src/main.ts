@@ -1,4 +1,5 @@
 import { createApp } from 'vue';
+
 import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router';
 
 import App from './App.vue';
