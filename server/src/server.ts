@@ -1,6 +1,7 @@
-import cors from '@fastify/cors';
+import Fastify from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 
-import Fastify, { FastifyReply, FastifyRequest } from 'fastify';
+import cors from '@fastify/cors';
 
 import dotenv from 'dotenv';
 

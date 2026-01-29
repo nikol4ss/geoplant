@@ -4,17 +4,24 @@
   "trailingComma": "all",
   "printWidth": 100,
   "tabWidth": 2,
+  "useTabs": false,
   "endOfLine": "lf",
+
   "bracketSpacing": true,
+  "bracketSameLine": false,
   "arrowParens": "always",
+  "quoteProps": "as-needed",
 
   "plugins": ["@trivago/prettier-plugin-sort-imports"],
 
   "importOrder": [
+    "^node:.*$",
+
     "^fastify$",
+    "^@fastify/.*$",
+
     "^dotenv$",
     "^zod$",
-    "^mysql2$",
     "^@prisma/client$",
 
     "^[a-zA-Z].*$",
