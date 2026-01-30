@@ -1,4 +1,4 @@
-import { authController } from './modules/auth/auth.controller.js';
+import { authRoutes } from './modules/auth/auth.router.js';
 
 import Fastify from 'fastify';
 import type { FastifyReply, FastifyRequest } from 'fastify';
@@ -96,7 +96,7 @@ app.get('/ping', async () => ({
   timestamp: new Date().toISOString(),
 }));
 
-app.post('/signup', authController.signup);
+app.register(authRoutes, { prefix: '/auth' });
 
 const start = async (): Promise<void> => {
   try {

@@ -5,7 +5,7 @@
   "type": "module",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "nodemon --watch src --exec ts-node -r tsconfig-paths/register src/server.ts",
+    "dev": "nodemon --watch src --exec \"tsx src/server.ts\"",
     "build": "tsc",
     "start": "node dist/server.js",
     "prisma:migrate": "pnpm prisma migrate dev",
@@ -20,8 +20,7 @@
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "@types/node": "^25.1.0",
-    "@types/node-cache": "^4.2.5",
-    "@types/pino": "^7.0.5",
+    "@types/pg": "^8.16.0",
     "@typescript-eslint/eslint-plugin": "^8.54.0",
     "@typescript-eslint/parser": "^8.54.0",
     "dotenv": "^17.2.3",
@@ -32,14 +31,18 @@
     "prisma": "^7.3.0",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   },
   "dependencies": {
     "@fastify/cors": "^11.2.0",
+    "@prisma/adapter-mariadb": "^7.3.0",
+    "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
     "bcryptjs": "^3.0.3",
     "fastify": "^5.7.2",
     "node-cache": "^5.1.2",
+    "pg": "^8.17.2",
     "pino": "^10.3.0",
     "zod": "^4.3.6"
   }

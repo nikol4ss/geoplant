@@ -4,3 +4,7 @@ migrations
 generated
 dist
 
+
+/generated/prisma
+
+/generated/prisma

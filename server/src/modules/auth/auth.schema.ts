@@ -1,6 +1,15 @@
-import { Ocuppation, Organization, Status } from '@/generated/prisma/enums.js';
-
 import { z } from 'zod';
+
+export const Status = ['Active', 'Inactive'] as const;
+export const Organization = ['None', 'Company', 'Institution'] as const;
+export const Ocuppation = [
+  'Admin',
+  'Student',
+  'Teacher',
+  'Engineer',
+  'Researcher',
+  'Botanist',
+] as const;
 
 export interface SignupRequestBody {
   name: string;
@@ -39,7 +48,7 @@ export const UserSchema = z.object({
       'Senha: deve conter ao menos 1 número e 1 caractere especial',
     ),
 
-  status: z.enum(Status),
+  status: z.enum(Status).optional(),
 });
 
 export const SignupSchema = UserSchema;
