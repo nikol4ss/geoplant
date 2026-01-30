@@ -16,6 +16,8 @@
       "@/*": ["src/*"]
     },
 
+    "allowSyntheticDefaultImports": true,
+
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,

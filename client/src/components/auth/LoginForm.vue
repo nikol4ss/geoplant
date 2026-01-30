@@ -28,40 +28,40 @@ const props = defineProps<{
         <form class="p-6 md:p-8">
           <FieldGroup>
             <div class="flex flex-col items-center gap-2 text-center">
-              <h1 class="text-2xl font-bold">Welcome <span class="text-primary">GeoPlant</span></h1>
-
-              <p class="text-muted-foreground text-balance">Access your account</p>
+              <h1 class="text-2xl font-bold">
+                Bem-vindo ao <span class="text-primary">GeoPlant</span>
+              </h1>
+              <p class="text-muted-foreground text-balance">Acesse sua Conta</p>
             </div>
 
             <Field>
               <FieldLabel for="email"> E-mail </FieldLabel>
-              <Input id="email" type="email" placeholder="email@example.com" required />
+              <Input id="email" type="email" placeholder="email@exemplo.com" required />
             </Field>
 
             <Field>
-              <FieldLabel for="password"> Password </FieldLabel>
-
+              <FieldLabel for="password"> Senha </FieldLabel>
               <PasswordInput />
             </Field>
 
             <Field>
-              <Button type="submit"> Login </Button>
+              <Button type="submit"> Entrar </Button>
             </Field>
 
             <FieldSeparator class="*:data-[slot=field-separator-content]:bg-card">
-              or
+              ou
             </FieldSeparator>
 
             <Field>
-              <Button type="submit"> Continue as Nikolas Campos </Button>
+              <Button type="submit"> Continuar Nikolas Campos </Button>
             </Field>
 
             <FieldSeparator class="*:data-[slot=field-separator-content]:bg-card">
-              Don't have an account?
+              Não tem uma conta?
             </FieldSeparator>
 
             <FieldDescription class="text-center">
-              <RouterLink to="/auth/signup"> Create an Account </RouterLink>
+              <RouterLink to="/auth/signup"> Criar uma Conta </RouterLink>
             </FieldDescription>
           </FieldGroup>
         </form>
@@ -71,8 +71,8 @@ const props = defineProps<{
       </CardContent>
     </Card>
     <FieldDescription class="px-6 text-center">
-      By clicking continue, you agree to our <a href="#">Terms of Service</a> and
-      <a href="#">Privacy Policy</a>.
+      Ao clicar em continuar, você concorda com nossos <a href="#">Termos de Serviço</a> e
+      <a href="#">Política de Privacidade</a>.
     </FieldDescription>
   </div>
 </template>

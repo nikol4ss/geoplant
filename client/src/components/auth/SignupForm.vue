@@ -42,55 +42,57 @@ const props = defineProps<{
         <form class="p-6 md:p-8">
           <FieldGroup>
             <div class="flex flex-col items-center gap-2 text-center">
-              <h1 class="text-2xl font-bold">Welcome <span class="text-primary">GeoPlant</span></h1>
-              <p class="text-muted-foreground text-balance">Create your account</p>
+              <h1 class="text-2xl font-bold">
+                Bem-vindo ao <span class="text-primary">GeoPlant</span>
+              </h1>
+              <p class="text-muted-foreground text-balance">Crie sua Conta</p>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
               <Field>
-                <FieldLabel for="name"> Name </FieldLabel>
-                <Input id="name" type="text" placeholder="Your name" required />
+                <FieldLabel for="name"> Nome </FieldLabel>
+                <Input id="name" type="text" placeholder="Seu nome" required />
               </Field>
 
               <Field>
-                <FieldLabel for="surname"> Surname </FieldLabel>
-                <Input id="surname" type="text" placeholder="Your surname" required />
+                <FieldLabel for="surname"> Sobrenome </FieldLabel>
+                <Input id="surname" type="text" placeholder="Seu sobrenome" required />
               </Field>
             </div>
 
             <Field>
-              <FieldLabel> Organization </FieldLabel>
+              <FieldLabel> Organização </FieldLabel>
               <Tabs v-model="organizationType" default-value="none">
                 <TabsList class="w-full">
-                  <TabsTrigger value="none">None</TabsTrigger>
-                  <TabsTrigger value="company">Company</TabsTrigger>
-                  <TabsTrigger value="institution">Institution</TabsTrigger>
+                  <TabsTrigger value="none">Nenhum</TabsTrigger>
+                  <TabsTrigger value="company">Empresa</TabsTrigger>
+                  <TabsTrigger value="institution">Instituição</TabsTrigger>
                 </TabsList>
               </Tabs>
             </Field>
 
             <Field v-if="organizationType === 'company'">
-              <Input id="cnpj" type="text" placeholder="00.000.000/0000-00" />
+              <Input id="cnpj" type="text" placeholder="Nome da Empresa" />
             </Field>
 
             <Field v-else-if="organizationType === 'institution'">
-              <Input id="institution_code" type="text" placeholder="Enter CNPq or MEC code" />
+              <Input id="institution_code" type="text" placeholder="Nome da Instituição" />
             </Field>
 
             <Field>
-              <FieldLabel>Occupation</FieldLabel>
-              <Select v-model="occupation">
+              <FieldLabel>Ocupação</FieldLabel>
+              <Select v-model="occupation" required>
                 <SelectTrigger class="w-full">
-                  <SelectValue placeholder="Select the occupation" />
+                  <SelectValue placeholder="Selecione a ocupação" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    <SelectLabel>Occupation</SelectLabel>
-                    <SelectItem value="student"> Student </SelectItem>
-                    <SelectItem value="teacher"> Teacher </SelectItem>
-                    <SelectItem value="engineer"> Engineer </SelectItem>
-                    <SelectItem value="researcher"> Researcher </SelectItem>
-                    <SelectItem value="botanist"> Botanist </SelectItem>
+                    <SelectLabel>Ocupação</SelectLabel>
+                    <SelectItem value="student">Estudante</SelectItem>
+                    <SelectItem value="teacher">Professor</SelectItem>
+                    <SelectItem value="engineer">Engenheiro</SelectItem>
+                    <SelectItem value="researcher">Pesquisador</SelectItem>
+                    <SelectItem value="botanist">Botânico</SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>
@@ -98,25 +100,24 @@ const props = defineProps<{
 
             <Field>
               <FieldLabel for="email"> E-mail </FieldLabel>
-              <Input id="email" type="email" placeholder="email@example.com" required />
+              <Input id="email" type="email" placeholder="email@exemplo.com" required />
             </Field>
 
             <Field>
-              <FieldLabel for="password"> Password </FieldLabel>
-
+              <FieldLabel for="password"> Senha </FieldLabel>
               <PasswordInput />
             </Field>
 
             <Field>
-              <Button type="submit"> Signup </Button>
+              <Button type="submit"> Cadastrar-se </Button>
             </Field>
 
             <FieldSeparator class="*:data-[slot=field-separator-content]:bg-card">
-              Do you already have an account?
+              Você já tem uma conta?
             </FieldSeparator>
 
             <FieldDescription class="text-center">
-              <RouterLink to="/auth/login"> Access Account </RouterLink>
+              <RouterLink to="/auth/login"> Acessar Conta </RouterLink>
             </FieldDescription>
           </FieldGroup>
         </form>
@@ -126,8 +127,8 @@ const props = defineProps<{
       </CardContent>
     </Card>
     <FieldDescription class="px-6 text-center">
-      By clicking continue, you agree to our <a href="#">Terms of Service</a> and
-      <a href="#">Privacy Policy</a>.
+      Ao clicar em continuar, você concorda com nossos <a href="#">Termos de Serviço</a> e
+      <a href="#">Política de Privacidade</a>.
     </FieldDescription>
   </div>
 </template>

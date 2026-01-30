@@ -10,6 +10,43 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
 }
 
+enum Status {
+  Active
+  Inactive
+}
+
+enum Organization {
+  None
+  Company
+  Institution
+}
+
+enum Ocuppation {
+  Admin
+  Student
+  Teacher
+  Engineer
+  Researcher
+  Botanist
+}
+
+model User {
+  id                 Int          @id @default(autoincrement())
+
+  name               String
+  surname            String
+
+  organization       Organization @default(None)
+  organization_name  String?
+  occupation         Ocuppation   @default(Student)
+
+  email              String       @unique
+  password           String
+
+  status             Status       @default(Active)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+}

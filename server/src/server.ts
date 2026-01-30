@@ -1,8 +1,13 @@
+import { authController } from './modules/auth/auth.controller.js';
+
 import Fastify from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
+
 import cors from '@fastify/cors';
+
 import dotenv from 'dotenv';
+
 import crypto from 'crypto';
-import type { FastifyRequest, FastifyReply } from 'fastify';
 
 dotenv.config();
 
@@ -86,11 +91,12 @@ app.setErrorHandler((error: unknown, request: FastifyRequest, reply: FastifyRepl
   });
 });
 
-
 app.get('/ping', async () => ({
   status: 'pong',
   timestamp: new Date().toISOString(),
 }));
+
+app.post('/signup', authController.signup);
 
 const start = async (): Promise<void> => {
   try {
@@ -99,11 +105,7 @@ const start = async (): Promise<void> => {
       host: '0.0.0.0',
     });
   } catch (err: unknown) {
-    app.log.fatal(
-      err instanceof Error
-        ? { message: err.message, stack: err.stack }
-        : { err },
-    );
+    app.log.fatal(err instanceof Error ? { message: err.message, stack: err.stack } : { err });
     process.exit(1);
   }
 };
