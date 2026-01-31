@@ -14,8 +14,8 @@ function isAxiosError(err: unknown): err is AxiosErrorLike {
 
 type ToastPromiseMessages<T = any> = {
   loading?: string;
-  success?: string | ((data: T) => string);
-  error?: string | ((err: unknown) => string | string[]);
+  success?: string | ((data: T) => string | { message: string; advice?: string });
+  error?: string | ((err: unknown) => string | string[] | { message: string; advice?: string });
 };
 
 export function parseApiError(err: unknown): string[] {
@@ -23,15 +23,13 @@ export function parseApiError(err: unknown): string[] {
     const { data } = err.response ?? {};
     const output: string[] = [];
 
-    // Zod
     if (Array.isArray(data?.errors) && data.errors.length > 0) {
       data.errors.forEach((e: any) => {
-        output.push(`${e.message}\n Campos inválidos. Tente novamente.`);
+        output.push(`${e.message}\nCampos inválidos. Tente novamente.`);
       });
       return output;
     }
 
-    // Fastfy
     if (data?.message) {
       output.push(`${data.message}${data.advice ? `\n${data.advice}` : ''}`);
       return output;
@@ -48,7 +46,20 @@ function toastError(message: string) {
   toast.error({
     render() {
       const lines = message.split('\n');
+      return h(
+        'div',
+        { class: 'flex flex-col gap-1' },
+        lines.map((line) => h('div', line)),
+      );
+    },
+  });
+}
 
+function toastSuccess(message: string, advice?: string) {
+  toast.success({
+    render() {
+      const lines = [message];
+      if (advice) lines.push(advice);
       return h(
         'div',
         { class: 'flex flex-col gap-1' },
@@ -59,8 +70,8 @@ function toastError(message: string) {
 }
 
 export const Toast = {
-  success(message: string) {
-    toast.success(message);
+  success(message: string, advice?: string) {
+    toastSuccess(message, advice);
   },
 
   error(message: string | string[]) {
@@ -82,12 +93,27 @@ export const Toast = {
     try {
       const data = await promise;
 
-      toast.success(
-        typeof messages.success === 'function'
-          ? messages.success(data)
-          : (messages.success ?? 'Sucesso'),
-        { id },
-      );
+      let successMessage = 'Sucesso';
+      let adviceMessage: string | undefined;
+
+      if (typeof messages.success === 'function') {
+        const result = messages.success(data);
+        if (typeof result === 'string') {
+          const parts = result.split('\n');
+          successMessage = parts[0] || 'Sucesso';
+          adviceMessage = parts[1];
+        } else {
+          successMessage = result.message;
+          adviceMessage = result.advice;
+        }
+      } else if (typeof messages.success === 'string') {
+        const parts = messages.success.split('\n');
+        successMessage = parts[0] || 'Sucesso';
+        adviceMessage = parts[1];
+      }
+
+      toastSuccess(successMessage, adviceMessage);
+      toast.dismiss(id);
 
       return data;
     } catch (err: unknown) {
@@ -95,18 +121,20 @@ export const Toast = {
 
       if (typeof messages.error === 'function') {
         const result = messages.error(err);
-        errors = Array.isArray(result) ? result : [result];
+        if (typeof result === 'string') errors = [result];
+        else if (Array.isArray(result)) errors = result;
+        else errors = [`${result.message}${result.advice ? `\n${result.advice}` : ''}`];
       } else if (messages.error) {
-        errors = Array.isArray(messages.error) ? messages.error : [messages.error];
+        if (Array.isArray(messages.error)) errors = messages.error;
+        else errors = [messages.error];
       } else {
         errors = parseApiError(err);
       }
 
       errors.forEach((msg) => toastError(msg));
+      toast.dismiss(id);
 
       throw err;
-    } finally {
-      toast.dismiss(id);
     }
   },
 };

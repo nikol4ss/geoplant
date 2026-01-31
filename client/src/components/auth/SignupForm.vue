@@ -2,9 +2,12 @@
 import { createUser } from '@/api/modules/auth/auth.api';
 import type { SignupPayload } from '@/models/modules/auth/auth.model';
 
-import { type HTMLAttributes } from 'vue';
+import { type HTMLAttributes, watch } from 'vue';
 import { ref } from 'vue';
-import { watch } from 'vue';
+
+import { useRouter } from 'vue-router';
+
+import { toast } from 'vue-sonner';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -32,6 +35,8 @@ import { cn, delay } from '@/lib/utils';
 
 import PasswordInput from './tooltip/PasswordInput.vue';
 
+const router = useRouter();
+
 const props = defineProps<{
   class?: HTMLAttributes['class'];
 }>();
@@ -53,22 +58,28 @@ const submit = async () => {
   loading.value = true;
   error.value = null;
 
+  const loadingId = toast.loading('Criando sua conta. Aguarde um momento.');
+
   try {
-    await Toast.promise(
-      (async () => {
-        const res = await createUser(form.value);
-        await delay(3000);
-        return res;
-      })(),
-      {
-        loading: 'Criando Conta',
-        // TODO: Colocar delay para mostrar o success
-        success: () => 'Conta criada com sucesso',
-        error: (err) => parseApiError(err),
-      },
+    await delay(2000);
+    await createUser(form.value);
+
+    toast.dismiss(loadingId);
+    router.push('/atlas');
+
+    await delay(200);
+
+    Toast.success(
+      'Conta criada com sucesso.',
+      `${form.value.name} ${form.value.surname}, seja bem-vindo!`,
     );
+
+    await delay(3000);
   } catch (err: unknown) {
+    toast.dismiss(loadingId);
+
     error.value = parseApiError(err)[0] ?? 'Erro inesperado';
+    Toast.error(parseApiError(err));
   } finally {
     loading.value = false;
   }

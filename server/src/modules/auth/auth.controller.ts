@@ -6,18 +6,27 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 
 import { z } from 'zod';
 
+import { rateLimit } from '@/utils/ratelimit.util.js';
+
 export const authController = {
   async signup(request: FastifyRequest, reply: FastifyReply) {
     try {
-      const parsed = SignupSchema.safeParse(request.body);
+      const body = request.body as any;
+
+      rateLimit(`create-user:${body.email.toLowerCase()}:${request.ip}`, 5, 2 * 60 * 1000);
+
+      const parsed = SignupSchema.safeParse(body);
 
       if (!parsed.success) {
-        return reply.status(400).send({ success: false, errors: parsed.error.issues });
+        return reply.status(400).send({
+          success: false,
+          errors: parsed.error.issues,
+        });
       }
 
       const user = await authService.createUser(parsed.data);
 
-      reply.status(201).send({
+      return reply.status(201).send({
         success: true,
         data: user,
       });
@@ -37,8 +46,7 @@ export const authController = {
         });
       }
 
-      console.error('SIGNUP_FAILED:', err);
-      reply.status(500).send({ success: false, message: 'Internal server error' });
+      return reply.status(500).send({ success: false, message: 'Internal server error' });
     }
   },
 };
