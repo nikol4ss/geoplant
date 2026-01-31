@@ -27,8 +27,8 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-import { Toast } from '@/lib/toast.util';
-import { cn } from '@/lib/utils';
+import { Toast, parseApiError } from '@/lib/toast.util';
+import { cn, delay } from '@/lib/utils';
 
 import PasswordInput from './tooltip/PasswordInput.vue';
 
@@ -54,13 +54,21 @@ const submit = async () => {
   error.value = null;
 
   try {
-    await Toast.promise(createUser(form.value), {
-      loading: 'Criando conta...',
-      success: () => 'Conta criada com sucesso',
-      error: (err) => err?.response?.data?.message ?? 'Erro ao criar conta',
-    });
-  } catch (err: any) {
-    error.value = err?.response?.data?.message ?? 'Erro ao criar conta';
+    await Toast.promise(
+      (async () => {
+        const res = await createUser(form.value);
+        await delay(3000);
+        return res;
+      })(),
+      {
+        loading: 'Criando Conta',
+        // TODO: Colocar delay para mostrar o success
+        success: () => 'Conta criada com sucesso',
+        error: (err) => parseApiError(err),
+      },
+    );
+  } catch (err: unknown) {
+    error.value = parseApiError(err)[0] ?? 'Erro inesperado';
   } finally {
     loading.value = false;
   }
@@ -109,7 +117,7 @@ watch(
 
             <Field>
               <FieldLabel> Organização </FieldLabel>
-              <Tabs v-model="form.organization" default-value="none">
+              <Tabs v-model="form.organization" default-value="None">
                 <TabsList class="w-full">
                   <TabsTrigger value="None">Nenhum</TabsTrigger>
                   <TabsTrigger value="Company">Empresa</TabsTrigger>

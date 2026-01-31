@@ -5,5 +5,5 @@ import 'vue-sonner/style.css';
 
 <template>
   <router-view />
-  <Toaster rich-colors />
+  <Toaster rich-colors theme="system" :expand="true" position="bottom-right" />
 </template>
