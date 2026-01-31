@@ -1,6 +1,10 @@
 <script setup lang="ts">
+import { createUser } from '@/api/modules/auth/auth.api';
+import type { SignupPayload } from '@/models/modules/auth/auth.model';
+
 import { type HTMLAttributes } from 'vue';
 import { ref } from 'vue';
+import { watch } from 'vue';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,23 +27,60 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+import { Toast } from '@/lib/toast.util';
 import { cn } from '@/lib/utils';
 
 import PasswordInput from './tooltip/PasswordInput.vue';
 
-const organizationType = ref<'none' | 'company' | 'institution'>('none');
-const occupation = ref<string | null>(null);
-
 const props = defineProps<{
   class?: HTMLAttributes['class'];
 }>();
+
+const form = ref<SignupPayload>({
+  name: '',
+  surname: '',
+  email: '',
+  password: '',
+  organization: undefined,
+  organization_name: undefined,
+  occupation: undefined,
+});
+
+const loading = ref(false);
+const error = ref<string | null>(null);
+
+const submit = async () => {
+  loading.value = true;
+  error.value = null;
+
+  try {
+    await Toast.promise(createUser(form.value), {
+      loading: 'Criando conta...',
+      success: () => 'Conta criada com sucesso',
+      error: (err) => err?.response?.data?.message ?? 'Erro ao criar conta',
+    });
+  } catch (err: any) {
+    error.value = err?.response?.data?.message ?? 'Erro ao criar conta';
+  } finally {
+    loading.value = false;
+  }
+};
+
+watch(
+  () => form.value.organization,
+  (value) => {
+    if (value === 'None') {
+      form.value.organization_name = undefined;
+    }
+  },
+);
 </script>
 
 <template>
   <div :class="cn('flex flex-col gap-6', props.class)">
     <Card class="overflow-hidden p-0 rounded-lg">
       <CardContent class="grid p-0 md:grid-cols-2">
-        <form class="p-6 md:p-8">
+        <form class="p-6 md:p-8" @submit.prevent="submit">
           <FieldGroup>
             <div class="flex flex-col items-center gap-2 text-center">
               <h1 class="text-2xl font-bold">
@@ -51,48 +92,64 @@ const props = defineProps<{
             <div class="grid grid-cols-2 gap-3">
               <Field>
                 <FieldLabel for="name"> Nome </FieldLabel>
-                <Input id="name" type="text" placeholder="Seu nome" required />
+                <Input v-model="form.name" id="name" type="text" placeholder="Seu nome" required />
               </Field>
 
               <Field>
                 <FieldLabel for="surname"> Sobrenome </FieldLabel>
-                <Input id="surname" type="text" placeholder="Seu sobrenome" required />
+                <Input
+                  v-model="form.surname"
+                  id="surname"
+                  type="text"
+                  placeholder="Seu sobrenome"
+                  required
+                />
               </Field>
             </div>
 
             <Field>
               <FieldLabel> Organização </FieldLabel>
-              <Tabs v-model="organizationType" default-value="none">
+              <Tabs v-model="form.organization" default-value="none">
                 <TabsList class="w-full">
-                  <TabsTrigger value="none">Nenhum</TabsTrigger>
-                  <TabsTrigger value="company">Empresa</TabsTrigger>
-                  <TabsTrigger value="institution">Instituição</TabsTrigger>
+                  <TabsTrigger value="None">Nenhum</TabsTrigger>
+                  <TabsTrigger value="Company">Empresa</TabsTrigger>
+                  <TabsTrigger value="Institution">Instituição</TabsTrigger>
                 </TabsList>
               </Tabs>
             </Field>
 
-            <Field v-if="organizationType === 'company'">
-              <Input id="cnpj" type="text" placeholder="Nome da Empresa" />
+            <Field v-if="form.organization === 'Company'">
+              <Input
+                v-model="form.organization_name"
+                id="cnpj"
+                type="text"
+                placeholder="Nome da Empresa"
+              />
             </Field>
 
-            <Field v-else-if="organizationType === 'institution'">
-              <Input id="institution_code" type="text" placeholder="Nome da Instituição" />
+            <Field v-else-if="form.organization === 'Institution'">
+              <Input
+                v-model="form.organization_name"
+                id="institution_code"
+                type="text"
+                placeholder="Nome da Instituição"
+              />
             </Field>
 
             <Field>
               <FieldLabel>Ocupação</FieldLabel>
-              <Select v-model="occupation" required>
+              <Select v-model="form.occupation" required>
                 <SelectTrigger class="w-full">
                   <SelectValue placeholder="Selecione a ocupação" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
                     <SelectLabel>Ocupação</SelectLabel>
-                    <SelectItem value="student">Estudante</SelectItem>
-                    <SelectItem value="teacher">Professor</SelectItem>
-                    <SelectItem value="engineer">Engenheiro</SelectItem>
-                    <SelectItem value="researcher">Pesquisador</SelectItem>
-                    <SelectItem value="botanist">Botânico</SelectItem>
+                    <SelectItem value="Student">Estudante</SelectItem>
+                    <SelectItem value="Teacher">Professor</SelectItem>
+                    <SelectItem value="Engineer">Engenheiro</SelectItem>
+                    <SelectItem value="Researcher">Pesquisador</SelectItem>
+                    <SelectItem value="Botanist">Botânico</SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>
@@ -100,12 +157,18 @@ const props = defineProps<{
 
             <Field>
               <FieldLabel for="email"> E-mail </FieldLabel>
-              <Input id="email" type="email" placeholder="email@exemplo.com" required />
+              <Input
+                v-model="form.email"
+                id="email"
+                type="email"
+                placeholder="email@exemplo.com"
+                required
+              />
             </Field>
 
             <Field>
               <FieldLabel for="password"> Senha </FieldLabel>
-              <PasswordInput />
+              <PasswordInput v-model="form.password" />
             </Field>
 
             <Field>

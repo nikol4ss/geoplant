@@ -17,7 +17,10 @@ export const authController = {
 
       const user = await authService.createUser(parsed.data);
 
-      reply.status(201).send({ success: true, user });
+      reply.status(201).send({
+        success: true,
+        data: user,
+      });
     } catch (err: unknown) {
       if (err instanceof AppError) {
         return reply.status(err.statusCode).send({
