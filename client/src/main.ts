@@ -8,7 +8,7 @@ import './style.css';
 
 router.beforeEach(
   (to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
-    document.title = (to.meta?.title as string) || 'Loopcontract';
+    document.title = (to.meta?.title as string) || 'GeoPlant';
     next();
   },
 );

@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 
 import { cn } from '@/lib/utils';
 
-import PasswordInput from './tooltip/PasswordInput.vue';
+import PasswordInput from '../tooltip/PasswordInput.vue';
 
 const props = defineProps<{
   class?: HTMLAttributes['class'];
