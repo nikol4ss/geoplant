@@ -19,6 +19,7 @@
   "packageManager": "pnpm@10.20.0",
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
+    "@types/bcrypt": "^6.0.0",
     "@types/node": "^25.1.0",
     "@types/pg": "^8.16.0",
     "@typescript-eslint/eslint-plugin": "^8.54.0",
@@ -36,11 +37,14 @@
   },
   "dependencies": {
     "@fastify/cors": "^11.2.0",
+    "@fastify/jwt": "^10.0.0",
     "@prisma/adapter-mariadb": "^7.3.0",
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
+    "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
     "fastify": "^5.7.2",
+    "jsonwebtoken": "^9.0.3",
     "node-cache": "^5.1.2",
     "pg": "^8.17.2",
     "pino": "^10.3.0",

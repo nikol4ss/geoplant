@@ -4,9 +4,12 @@ import { Prisma } from '@/generated/prisma/client.js';
 import { AppError } from '@/lib/error.lib.js';
 import { prisma } from '@/lib/prisma.lib.js';
 
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+
+import { comparePassword } from '@/utils/encrypt.util.js';
 import { hashPassword } from '@/utils/hashed.util.js';
 
-export const authService = {
+export const authService = (app: FastifyInstance) => ({
   async createUser(data: UserCreate) {
     if (data.organization === 'None' && data.organization_name) {
       throw AuthErrors.FORBIDDEN_FIELD();
@@ -53,4 +56,34 @@ export const authService = {
       throw AuthErrors.CREATE_USER_FAILED();
     }
   },
-};
+
+  async authUser(data: { email: string; password: string }) {
+    const user = await prisma.user.findUnique({
+      where: { email: data.email.toLowerCase() },
+    });
+
+    if (!user) {
+      throw AuthErrors.INVALID_CREDENTIALS();
+    }
+
+    if (user.status !== 'Active') {
+      throw AuthErrors.USER_INACTIVE();
+    }
+
+    const valid = await comparePassword(data.password, user.password);
+    if (!valid) {
+      throw AuthErrors.INVALID_CREDENTIALS();
+    }
+
+    const token = app.jwt.sign({
+      id: user.id,
+      email: user.email,
+    });
+
+    return {
+      token,
+    };
+  },
+
+
+});

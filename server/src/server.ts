@@ -1,9 +1,10 @@
 import { authRoutes } from './modules/auth/auth.router.js';
 
 import Fastify from 'fastify';
-import type { FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
 import cors from '@fastify/cors';
+import fastifyJwt from '@fastify/jwt';
 
 import dotenv from 'dotenv';
 
@@ -13,7 +14,7 @@ dotenv.config();
 
 const isProd = process.env.NODE_ENV === 'production';
 
-const app = Fastify({
+const app: FastifyInstance = Fastify({
   genReqId: () => crypto.randomUUID(),
   disableRequestLogging: true,
   logger: {
@@ -31,8 +32,25 @@ const app = Fastify({
   },
 });
 
-app.register(cors, { origin: '*' });
+  // CORS
+  app.register(cors, { origin: '*' });
 
+  // JWT
+  app.register(fastifyJwt, {
+    secret: process.env.JWT_SECRET || 'JWT_NOT_FOUND',
+    sign: { expiresIn: '3d' },
+  });
+
+  app.decorate('authenticate', async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      await request.jwtVerify();
+    } catch {
+      reply.status(401).send({ success: false, message: 'Unauthorized' });
+    }
+  });
+
+
+// Hook
 app.addHook('preHandler', async (request: FastifyRequest) => {
   if (!isProd) {
     request.log.debug({
@@ -50,7 +68,6 @@ app.addHook('preHandler', async (request: FastifyRequest) => {
 
 app.addHook('onResponse', async (request: FastifyRequest, reply: FastifyReply) => {
   const status = reply.statusCode;
-
   const data = {
     reqId: request.id,
     method: request.method,
@@ -60,37 +77,23 @@ app.addHook('onResponse', async (request: FastifyRequest, reply: FastifyReply) =
     remoteAddress: request.ip,
   };
 
-  if (status >= 500) {
-    request.log.error({ ...data, type: 'SERVER_ERROR' });
-  } else if (status >= 400) {
-    request.log.warn({ ...data, type: 'CLIENT_ERROR' });
-  } else {
-    request.log.info(data);
-  }
+  if (status >= 500) request.log.error({ ...data, type: 'SERVER_ERROR' });
+  else if (status >= 400) request.log.warn({ ...data, type: 'CLIENT_ERROR' });
+  else request.log.info(data);
 });
 
+// Error
 app.setErrorHandler((error: unknown, request: FastifyRequest, reply: FastifyReply) => {
-  if (error instanceof Error) {
-    request.log.error({
-      reqId: request.id,
-      type: 'SERVER_ERROR',
-      message: error.message,
-      stack: error.stack,
-    });
-  } else {
-    request.log.error({
-      reqId: request.id,
-      type: 'SERVER_ERROR',
-      error,
-    });
-  }
-
-  reply.status(500).send({
-    error: 'SERVER_ERROR',
-    requestId: request.id,
+  request.log.error({
+    reqId: request.id,
+    type: 'SERVER_ERROR',
+    error: error instanceof Error ? error.message : error,
+    stack: error instanceof Error ? error.stack : undefined,
   });
+  reply.status(500).send({ error: 'SERVER_ERROR', requestId: request.id });
 });
 
+// Routes
 app.get('/ping', async () => ({
   status: 'pong',
   timestamp: new Date().toISOString(),
