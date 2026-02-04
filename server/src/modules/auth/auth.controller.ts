@@ -1,6 +1,7 @@
 import { LoginSchema, SignupSchema } from './auth.schema.js';
 import { authService } from './auth.service.js';
 import { AppError } from '@/lib/error.lib.js';
+import { prisma } from '@/lib/prisma.lib.js';
 
 import { FastifyReply, FastifyRequest } from 'fastify';
 
@@ -85,6 +86,27 @@ export const authController = {
         return reply.status(400).send({
           success: false,
           errors: err.issues,
+        });
+      }
+
+      return reply.status(500).send({ success: false, message: 'Internal server error' });
+    }
+  },
+
+  async refreshToken(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const body = request.body as { refreshToken: string };
+      const service = authService(request.server);
+
+      const data = await service.refreshToken(body.refreshToken);
+
+      return reply.status(200).send({ success: true, data });
+    } catch (err: unknown) {
+      if (err instanceof AppError) {
+        return reply.status(err.statusCode).send({
+          success: false,
+          message: err.message,
+          advice: err.advice,
         });
       }
 

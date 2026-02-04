@@ -64,4 +64,28 @@ export const AuthErrors = {
       message: 'Erro ao criar usuário',
       advice: 'Tente novamente mais tarde.',
     }),
+
+  REFRESH_TOKEN_REQUIRED: () =>
+    new AppError({
+      code: 'REFRESH_TOKEN_REQUIRED',
+      statusCode: 400,
+      message: 'Refresh token obrigatório',
+      advice: 'Informe o refresh token na requisição.',
+    }),
+
+  INVALID_REFRESH_TOKEN: () =>
+    new AppError({
+      code: 'INVALID_REFRESH_TOKEN',
+      statusCode: 401,
+      message: 'Refresh token inválido',
+      advice: 'Token fornecido é inválido ou expirou.',
+    }),
+
+  TOKEN_GENERATION_FAILED: () =>
+    new AppError({
+      code: 'TOKEN_GENERATION_FAILED',
+      statusCode: 500,
+      message: 'Falha ao gerar token',
+      advice: 'Tente novamente mais tarde.',
+    }),
 };

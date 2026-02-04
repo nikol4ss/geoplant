@@ -1,13 +1,14 @@
 import { AuthErrors } from './auth.error.js';
-import { UserCreate } from './auth.schema.js';
+import { type JwtPayload, UserCreate } from './auth.schema.js';
 import { Prisma } from '@/generated/prisma/client.js';
 import { AppError } from '@/lib/error.lib.js';
 import { prisma } from '@/lib/prisma.lib.js';
 
-import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 
-import { comparePassword } from '@/utils/encrypt.util.js';
-import { hashPassword } from '@/utils/hashed.util.js';
+import { _jwt } from 'zod/v4/core';
+
+import { comparePassword, hashPassword } from '@/utils/hashed.util.js';
 
 export const authService = (app: FastifyInstance) => ({
   async createUser(data: UserCreate) {
@@ -62,26 +63,40 @@ export const authService = (app: FastifyInstance) => ({
       where: { email: data.email.toLowerCase() },
     });
 
-    if (!user) {
-      throw AuthErrors.INVALID_CREDENTIALS();
-    }
-
+    if (!user) throw AuthErrors.INVALID_CREDENTIALS();
     const valid = await comparePassword(data.password, user.password);
-    if (!valid) {
-      throw AuthErrors.INVALID_CREDENTIALS();
+    if (!valid) throw AuthErrors.INVALID_CREDENTIALS();
+    if (user.status !== 'Active') throw AuthErrors.USER_INACTIVE();
+
+    try {
+      const accessToken = app.jwt.sign({ id: user.id, email: user.email }, { expiresIn: '15m' });
+      const refreshToken = app.jwt.sign({ id: user.id, email: user.email }, { expiresIn: '7d' });
+
+      return { accessToken, refreshToken };
+    } catch {
+      throw AuthErrors.TOKEN_GENERATION_FAILED();
+    }
+  },
+
+  async refreshToken(token: string) {
+    if (!token) throw AuthErrors.REFRESH_TOKEN_REQUIRED();
+    let decoded;
+
+    try {
+      decoded = app.jwt.verify(token);
+    } catch {
+      throw AuthErrors.INVALID_REFRESH_TOKEN();
     }
 
-    if (user.status !== 'Active') {
-      throw AuthErrors.USER_INACTIVE();
+    const user = await prisma.user.findUnique({ where: { id: (decoded as JwtPayload).id } });
+    if (!user) throw AuthErrors.USER_NOT_FOUND();
+    if (user.status !== 'Active') throw AuthErrors.USER_INACTIVE();
+
+    try {
+      const accessToken = app.jwt.sign({ id: user.id, email: user.email }, { expiresIn: '15m' });
+      return { accessToken };
+    } catch {
+      throw AuthErrors.TOKEN_GENERATION_FAILED();
     }
-
-    const token = app.jwt.sign({
-      id: user.id,
-      email: user.email,
-    });
-
-    return {
-      token,
-    };
   },
 });

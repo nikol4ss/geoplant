@@ -11,6 +11,10 @@ export const Occupation = [
   'Botanist',
 ] as const;
 
+export interface JwtPayload {
+  id: number;
+}
+
 export const UserSchema = z
   .object({
     name: z
