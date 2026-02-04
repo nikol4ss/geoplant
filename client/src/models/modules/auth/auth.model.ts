@@ -30,4 +30,10 @@ export interface SignupPayload {
   occupation?: Occupation;
 }
 
+export interface LoginPayload {
+  email: string;
+  password: string;
+}
+
+export type LoginResponse = ApiResponse<User>;
 export type SignupResponse = ApiResponse<User>;

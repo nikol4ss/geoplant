@@ -72,7 +72,6 @@ export const authController = {
         success: true,
         data: result,
       });
-
     } catch (err: unknown) {
       if (err instanceof AppError) {
         return reply.status(err.statusCode).send({

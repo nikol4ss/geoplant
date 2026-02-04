@@ -66,13 +66,13 @@ export const authService = (app: FastifyInstance) => ({
       throw AuthErrors.INVALID_CREDENTIALS();
     }
 
-    if (user.status !== 'Active') {
-      throw AuthErrors.USER_INACTIVE();
-    }
-
     const valid = await comparePassword(data.password, user.password);
     if (!valid) {
       throw AuthErrors.INVALID_CREDENTIALS();
+    }
+
+    if (user.status !== 'Active') {
+      throw AuthErrors.USER_INACTIVE();
     }
 
     const token = app.jwt.sign({
@@ -84,6 +84,4 @@ export const authService = (app: FastifyInstance) => ({
       token,
     };
   },
-
-
 });
