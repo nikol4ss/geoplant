@@ -35,5 +35,15 @@ export interface LoginPayload {
   password: string;
 }
 
-export type LoginResponse = ApiResponse<User>;
+export interface TokenPayload {
+  refreshToken: string;
+}
+
+export interface LoginData {
+  accessToken: string;
+  refreshToken: string;
+  user: User;
+}
+
+export type LoginResponse = ApiResponse<LoginData>;
 export type SignupResponse = ApiResponse<User>;

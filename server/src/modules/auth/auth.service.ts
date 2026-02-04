@@ -94,7 +94,10 @@ export const authService = (app: FastifyInstance) => ({
 
     try {
       const accessToken = app.jwt.sign({ id: user.id, email: user.email }, { expiresIn: '15m' });
-      return { accessToken };
+      return {
+        accessToken,
+        user: { id: user.id, name: user.name, surname: user.surname, email: user.email },
+      };
     } catch {
       throw AuthErrors.TOKEN_GENERATION_FAILED();
     }

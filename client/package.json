@@ -19,6 +19,7 @@
     "clsx": "^2.1.1",
     "dnd-kit-vue": "^0.0.2",
     "lucide-vue-next": "^0.563.0",
+    "pinia": "^3.0.4",
     "reka-ui": "^2.7.0",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.18",

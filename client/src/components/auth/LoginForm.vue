@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { type HTMLAttributes } from 'vue';
+import { loginUser } from '@/api/modules/auth/auth.api';
+import type { LoginPayload } from '@/models/modules/auth/auth.model';
+import router from '@/router';
+
+import { type HTMLAttributes, ref } from 'vue';
+
+import { toast } from 'vue-sonner';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,20 +18,94 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 
-import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/stores/auth.store';
+
+import { Toast, parseApiError } from '@/lib/toast.util';
+import { cn, delay } from '@/lib/utils';
 
 import PasswordInput from '../tooltip/PasswordInput.vue';
 
 const props = defineProps<{
   class?: HTMLAttributes['class'];
 }>();
+
+const loading = ref(false);
+const error = ref<string | null>(null);
+
+const form = ref<LoginPayload>({
+  email: '',
+  password: '',
+});
+
+const submitLogin = async () => {
+  loading.value = true;
+  error.value = null;
+
+  const loadingId = toast.loading('Logando em sua conta');
+
+  try {
+    await delay(500);
+
+    const response = await loginUser(form.value);
+
+    if (!response.success || !response.data) {
+      throw new Error(response.message || 'Erro inesperado');
+    }
+
+    const { accessToken, refreshToken } = response.data;
+    const user = response.data.user;
+
+    const authStore = useAuthStore();
+    authStore.setTokens(accessToken, refreshToken);
+    authStore.user = user;
+
+    toast.dismiss(loadingId);
+
+    Toast.success('Login realizado com sucesso', `${user.name} ${user.surname}, seja bem-vindo.`);
+    router.push('/atlas');
+  } catch (err: unknown) {
+    toast.dismiss(loadingId);
+
+    error.value = parseApiError(err)[0] ?? 'Erro inesperado';
+    Toast.error(parseApiError(err));
+  } finally {
+    loading.value = false;
+  }
+};
+
+const loginWithRefreshToken = async () => {
+  const authStore = useAuthStore();
+  if (!authStore.refreshToken) {
+    Toast.error('Não há refresh token disponível.');
+    return;
+  }
+
+  loading.value = true;
+  const loadingId = toast.loading('Logando automaticamente...');
+
+  try {
+    await authStore.refresh();
+    toast.dismiss(loadingId);
+
+    Toast.success(
+      'Login realizado com sucesso',
+      `${authStore.user?.name} ${authStore.user?.surname}, seja bem-vindo.`,
+    );
+    router.push('/atlas');
+  } catch (err: unknown) {
+    toast.dismiss(loadingId);
+    Toast.error(parseApiError(err));
+  } finally {
+    loading.value = false;
+  }
+};
 </script>
 
 <template>
   <div :class="cn('flex flex-col gap-6', props.class)">
     <Card class="overflow-hidden p-0 rounded-lg">
       <CardContent class="grid p-0 md:grid-cols-2">
-        <form class="p-6 md:p-8">
+        <form class="p-6 md:p-8" @submit.prevent="submitLogin">
           <FieldGroup>
             <div class="flex flex-col items-center gap-2 text-center">
               <h1 class="text-2xl font-bold">
@@ -36,12 +116,18 @@ const props = defineProps<{
 
             <Field>
               <FieldLabel for="email"> E-mail </FieldLabel>
-              <Input id="email" type="email" placeholder="email@exemplo.com" required />
+              <Input
+                v-model="form.email"
+                id="email"
+                type="email"
+                placeholder="email@exemplo.com"
+                required
+              />
             </Field>
 
             <Field>
               <FieldLabel for="password"> Senha </FieldLabel>
-              <PasswordInput />
+              <PasswordInput v-model="form.password" />
             </Field>
 
             <Field>
@@ -53,7 +139,9 @@ const props = defineProps<{
             </FieldSeparator>
 
             <Field>
-              <Button type="submit"> Continuar Nikolas Campos </Button>
+              <Button type="button" @click="loginWithRefreshToken">
+                Continuar
+              </Button>
             </Field>
 
             <FieldSeparator class="*:data-[slot=field-separator-content]:bg-card">

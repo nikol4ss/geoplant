@@ -54,7 +54,7 @@ const form = ref<SignupPayload>({
   occupation: undefined,
 });
 
-const submit = async () => {
+const submitSignup = async () => {
   loading.value = true;
   error.value = null;
 
@@ -97,7 +97,7 @@ watch(
   <div :class="cn('flex flex-col gap-6', props.class)">
     <Card class="overflow-hidden p-0 rounded-lg">
       <CardContent class="grid p-0 md:grid-cols-2">
-        <form class="p-6 md:p-8" @submit.prevent="submit">
+        <form class="p-6 md:p-8" @submit.prevent="submitSignup">
           <FieldGroup>
             <header class="flex flex-col items-center gap-2 text-center">
               <h1 class="text-2xl font-bold">
