@@ -32,23 +32,22 @@ const app: FastifyInstance = Fastify({
   },
 });
 
-  // CORS
-  app.register(cors, { origin: '*' });
+// CORS
+app.register(cors, { origin: '*' });
 
-  // JWT
-  app.register(fastifyJwt, {
-    secret: process.env.JWT_SECRET || 'JWT_NOT_FOUND',
-    sign: { expiresIn: '3d' },
-  });
+// JWT
+app.register(fastifyJwt, {
+  secret: process.env.JWT_SECRET || 'JWT_NOT_FOUND',
+  sign: { expiresIn: '3d' },
+});
 
-  app.decorate('authenticate', async (request: FastifyRequest, reply: FastifyReply) => {
-    try {
-      await request.jwtVerify();
-    } catch {
-      reply.status(401).send({ success: false, message: 'Unauthorized' });
-    }
-  });
-
+app.decorate('authenticate', async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    await request.jwtVerify();
+  } catch {
+    reply.status(401).send({ success: false, message: 'Unauthorized' });
+  }
+});
 
 // Hook
 app.addHook('preHandler', async (request: FastifyRequest) => {
