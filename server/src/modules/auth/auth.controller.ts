@@ -1,7 +1,6 @@
 import { LoginSchema, SignupSchema } from './auth.schema.js';
 import { authService } from './auth.service.js';
 import { AppError } from '@/lib/error.lib.js';
-import { prisma } from '@/lib/prisma.lib.js';
 
 import { FastifyReply, FastifyRequest } from 'fastify';
 
@@ -13,7 +12,7 @@ export const authController = {
   async signup(request: FastifyRequest, reply: FastifyReply) {
     try {
       const service = authService(request.server);
-      const body = request.body as any;
+      const body = request.body as z.infer<typeof SignupSchema>;
 
       rateLimit(`create-user:${body.email.toLowerCase()}:${request.ip}`, 5, 2 * 60 * 1000);
 
@@ -55,9 +54,9 @@ export const authController = {
   async login(request: FastifyRequest, reply: FastifyReply) {
     try {
       const service = authService(request.server);
-      const body = request.body as any;
+      const body = request.body as z.infer<typeof LoginSchema>;
 
-      rateLimit(`login:${body.email.toLowerCase()}:${request.ip}`, 5, 2 * 60 * 1000);
+      rateLimit(`login-user:${body.email.toLowerCase()}:${request.ip}`, 5, 2 * 60 * 1000);
 
       const parsed = LoginSchema.safeParse(body);
 
@@ -99,7 +98,6 @@ export const authController = {
       const service = authService(request.server);
 
       const data = await service.refreshToken(body.refreshToken);
-
       return reply.status(200).send({ success: true, data });
     } catch (err: unknown) {
       if (err instanceof AppError) {
