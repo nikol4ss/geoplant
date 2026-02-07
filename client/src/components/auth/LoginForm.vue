@@ -3,10 +3,12 @@ import { loginUser } from '@/api/modules/auth/auth.api';
 import type { LoginPayload } from '@/models/modules/auth/auth.model';
 import router from '@/router';
 
-import { type HTMLAttributes, ref } from 'vue';
+import { type HTMLAttributes, onMounted, ref } from 'vue';
 
+import { Power, PowerOff } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -62,10 +64,7 @@ const submitLogin = async () => {
 
     toast.dismiss(loadingId);
 
-    Toast.success(
-      'Login realizado com sucesso',
-      `${user?.name || ''} ${user?.surname || ''}, seja bem-vindo.`,
-    );
+    Toast.success('Login realizado com sucesso seja bem-vindo.');
 
     router.push('/atlas');
   } catch (err: unknown) {
@@ -77,7 +76,6 @@ const submitLogin = async () => {
     loading.value = false;
   }
 };
-
 
 const submitLoginRefresh = async () => {
   if (!authStore.refreshToken) {
@@ -98,13 +96,27 @@ const submitLoginRefresh = async () => {
     );
     router.push('/atlas');
   } catch (err: unknown) {
-
     toast.dismiss(loadingId);
     Toast.error(parseApiError(err));
   } finally {
     loading.value = false;
   }
 };
+
+function handleLogout() {
+  authStore.logout();
+  router.push('/auth/login');
+}
+
+onMounted(async () => {
+  if (authStore.refreshToken && !authStore.user) {
+    try {
+      await authStore.refresh();
+    } catch {
+      authStore.logout();
+    }
+  }
+});
 </script>
 
 <template>
@@ -141,16 +153,35 @@ const submitLoginRefresh = async () => {
             </Field>
 
             <FieldSeparator
-              v-if="authStore.refreshToken"
+              v-if="authStore.user"
               class="*:data-[slot=field-separator-content]:bg-card"
             >
               ou
             </FieldSeparator>
 
-            <Field v-if="authStore.refreshToken">
-              <Button type="button" @click="submitLoginRefresh">
-                Continuar Logado
-              </Button>
+            <Field v-if="authStore.user">
+              <div class="flex items-center gap-3 border p-4 rounded-lg">
+                <Avatar class="h-8 w-8 rounded-lg">
+                  <AvatarFallback class="rounded-lg">NK</AvatarFallback>
+                </Avatar>
+
+                <div class="flex flex-col text-left text-sm leading-tight">
+                  <span class="truncate font-medium"
+                    >{{ authStore.user?.name || '' }} {{ authStore.user?.surname || '' }}</span
+                  >
+                  <span class="truncate text-xs">{{ authStore.user?.email || '' }}</span>
+                </div>
+
+                <div class="ml-auto flex items-center gap-2">
+                  <Button type="button" variant="secondary" @click="handleLogout">
+                    <PowerOff class="h-4 w-4 text-destructive" />
+                  </Button>
+
+                  <Button type="button" variant="secondary" @click="submitLoginRefresh">
+                    <Power class="h-4 w-4 text-primary" />
+                  </Button>
+                </div>
+              </div>
             </Field>
 
             <FieldSeparator class="*:data-[slot=field-separator-content]:bg-card">
