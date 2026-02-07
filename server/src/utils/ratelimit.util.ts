@@ -20,7 +20,7 @@ export function rateLimit(key: string, limit: number, windowMs: number) {
   }
 
   if (entry.count >= limit) {
-    throw AuthErrors.RATE_LIMIT_EXCEEDED();
+    throw AuthErrors.Auth.RATE_LIMIT_EXCEEDED();
   }
 
   entry.count++;

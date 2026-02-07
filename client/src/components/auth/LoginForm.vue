@@ -29,19 +29,22 @@ const props = defineProps<{
   class?: HTMLAttributes['class'];
 }>();
 
-const loading = ref(false);
-const error = ref<string | null>(null);
-
 const form = ref<LoginPayload>({
   email: '',
   password: '',
 });
 
+// TODO: melhora funções e reatividade do estado
+const authStore = useAuthStore();
+
+const loading = ref(false);
+const error = ref<string | null>(null);
+
 const submitLogin = async () => {
   loading.value = true;
   error.value = null;
 
-  const loadingId = toast.loading('Logando em sua conta');
+  const loadingId = toast.loading('Acessando sua conta');
 
   try {
     await delay(500);
@@ -55,13 +58,15 @@ const submitLogin = async () => {
     const { accessToken, refreshToken } = response.data;
     const user = response.data.user;
 
-    const authStore = useAuthStore();
-    authStore.setTokens(accessToken, refreshToken);
-    authStore.user = user;
+    authStore.setTokens(accessToken, refreshToken, user);
 
     toast.dismiss(loadingId);
 
-    Toast.success('Login realizado com sucesso', `${user.name} ${user.surname}, seja bem-vindo.`);
+    Toast.success(
+      'Login realizado com sucesso',
+      `${user?.name || ''} ${user?.surname || ''}, seja bem-vindo.`,
+    );
+
     router.push('/atlas');
   } catch (err: unknown) {
     toast.dismiss(loadingId);
@@ -73,15 +78,15 @@ const submitLogin = async () => {
   }
 };
 
-const loginWithRefreshToken = async () => {
-  const authStore = useAuthStore();
+
+const submitLoginRefresh = async () => {
   if (!authStore.refreshToken) {
     Toast.error('Não há refresh token disponível.');
     return;
   }
 
   loading.value = true;
-  const loadingId = toast.loading('Logando automaticamente...');
+  const loadingId = toast.loading('Logando automaticamente');
 
   try {
     await authStore.refresh();
@@ -89,10 +94,11 @@ const loginWithRefreshToken = async () => {
 
     Toast.success(
       'Login realizado com sucesso',
-      `${authStore.user?.name} ${authStore.user?.surname}, seja bem-vindo.`,
+      `${authStore.user?.name || ''} ${authStore.user?.surname || ''}, bem-vindo de volta.`,
     );
     router.push('/atlas');
   } catch (err: unknown) {
+
     toast.dismiss(loadingId);
     Toast.error(parseApiError(err));
   } finally {
@@ -130,17 +136,20 @@ const loginWithRefreshToken = async () => {
               <PasswordInput v-model="form.password" />
             </Field>
 
-            <Field>
+            <Field class="mt-5">
               <Button type="submit"> Entrar </Button>
             </Field>
 
-            <FieldSeparator class="*:data-[slot=field-separator-content]:bg-card">
+            <FieldSeparator
+              v-if="authStore.refreshToken"
+              class="*:data-[slot=field-separator-content]:bg-card"
+            >
               ou
             </FieldSeparator>
 
-            <Field>
-              <Button type="button" @click="loginWithRefreshToken">
-                Continuar
+            <Field v-if="authStore.refreshToken">
+              <Button type="button" @click="submitLoginRefresh">
+                Continuar Logado
               </Button>
             </Field>
 

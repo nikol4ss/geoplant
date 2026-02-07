@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { rateLimit } from '@/utils/ratelimit.util.js';
 
 export const authController = {
+  // Endpoint POST /auth/signup
   async signup(request: FastifyRequest, reply: FastifyReply) {
     try {
       const service = authService(request.server);
@@ -51,6 +52,7 @@ export const authController = {
     }
   },
 
+  // Endpoint POST /auth/login
   async login(request: FastifyRequest, reply: FastifyReply) {
     try {
       const service = authService(request.server);
@@ -92,6 +94,7 @@ export const authController = {
     }
   },
 
+  // Endpoint POST /auth/refresh
   async refreshToken(request: FastifyRequest, reply: FastifyReply) {
     try {
       const body = request.body as { refreshToken: string };

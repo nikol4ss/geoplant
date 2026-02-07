@@ -20,11 +20,7 @@ router.beforeEach(
     document.title = (to.meta?.title as string) || 'GeoPlant';
 
     if (to.meta.requiresAuth && !authStore.isLoggedIn) {
-      return next('/auth/login'); 
-    }
-
-    if (to.meta.public && authStore.isLoggedIn) {
-      return next('/atlas'); // não deixa entrar em login/signup se já estiver logado
+      return next('/auth/login');
     }
 
     next();

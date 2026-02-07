@@ -106,7 +106,7 @@ export const authService = (app: FastifyInstance) => ({
     if (user.status !== 'Active') throw AuthErrors.Auth.USER_INACTIVE();
 
     try {
-      const accessToken = app.jwt.sign({ id: user.id, email: user.email }, { expiresIn: '15m' });
+      const accessToken = app.jwt.sign({ id: user.id, email: user.email }, { expiresIn: '3m' });
       const refreshToken = app.jwt.sign({ id: user.id, email: user.email }, { expiresIn: '7d' });
 
       return { accessToken, refreshToken };
