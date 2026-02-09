@@ -86,6 +86,7 @@ export const Toast = {
 
       if (typeof messages.error === 'function') {
         const result = messages.error(err);
+
         if (typeof result === 'string') errors = [result];
         else if (Array.isArray(result)) errors = result;
         else errors = [`${result.message}${result.advice ? `\n${result.advice}` : ''}`];

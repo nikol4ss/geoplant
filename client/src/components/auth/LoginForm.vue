@@ -6,7 +6,6 @@ import router from '@/router';
 import { type HTMLAttributes, onMounted, ref } from 'vue';
 
 import { Power, PowerOff } from 'lucide-vue-next';
-import { toast } from 'vue-sonner';
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -25,9 +24,9 @@ import { useAuthStore } from '@/stores/auth/auth.store';
 import { cn } from '@/lib/classname.util';
 import { Toast } from '@/lib/toast.util';
 
-import { delay } from '@/utils/delay.util';
 import { parseApiError } from '@/utils/parseApiError.util';
 
+import DialogToggle from '../tooltip/DialogToggle.vue';
 import PasswordInput from '../tooltip/PasswordInput.vue';
 
 const authStore = useAuthStore();
@@ -37,7 +36,6 @@ const props = defineProps<{
 }>();
 
 const loading = ref(false);
-const error = ref<string | null>(null);
 const form = ref<LoginPayload>({
   email: '',
   password: '',
@@ -45,69 +43,52 @@ const form = ref<LoginPayload>({
 
 const handleLoginSubmit = async () => {
   loading.value = true;
-  error.value = null;
-
-  const loadingId = toast.loading('Acessando sua conta');
 
   try {
-    await delay(500);
+    const data = await Toast.promise(
+      authenticateUser(form.value).then((response) => {
+        if (!response.success) throw response;
+        return response.data;
+      }),
+      {
+        loading: 'Acessando sua conta',
+        success: 'Login Realizado \n Seja bem-vindo.',
+        error: (err) => parseApiError(err),
+      },
+    );
 
-    const response = await authenticateUser(form.value);
-
-    if (!response.success || !response.data) {
-      throw new Error(response.message || 'Erro inesperado');
-    }
-
-    const { accessToken, refreshToken } = response.data;
-    const user = response.data.user;
-
+    const { accessToken, refreshToken, user } = data;
     authStore.setTokens(accessToken, refreshToken, user);
 
-    toast.dismiss(loadingId);
-
-    Toast.success('Login realizado com sucesso seja bem-vindo.');
-
-    router.push('/atlas');
-  } catch (err: unknown) {
-    toast.dismiss(loadingId);
-
-    error.value = parseApiError(err)[0] ?? 'Erro inesperado';
-    Toast.error(parseApiError(err));
+    await router.push({ name: 'atlas' });
   } finally {
     loading.value = false;
   }
 };
 
 const handleSessionRestore = async () => {
-  if (!authStore.refreshToken) {
-    Toast.error('Não há refresh token disponível.');
-    return;
-  }
-
   loading.value = true;
-  const loadingId = toast.loading('Logando automaticamente');
 
   try {
-    await authStore.refresh();
-    toast.dismiss(loadingId);
+    await Toast.promise(authStore.refresh(), {
+      loading: 'Conectando à sua conta',
+      success: `Sessão Reconectada \n
+      Bem-vindo de volta, ${authStore.user?.name || ''} ${authStore.user?.surname || ''}.`,
+      error: (err) => parseApiError(err),
+    });
 
-    Toast.success(
-      'Login realizado com sucesso',
-      `${authStore.user?.name || ''} ${authStore.user?.surname || ''}, bem-vindo de volta.`,
-    );
-    router.push('/atlas');
-  } catch (err: unknown) {
-    toast.dismiss(loadingId);
-    Toast.error(parseApiError(err));
+    await router.push({ name: 'atlas' });
+  } catch {
+    authStore.logout();
   } finally {
     loading.value = false;
   }
 };
 
-function handleLogout() {
+const handleLogout = async () => {
   authStore.logout();
-  router.push('/auth/login');
-}
+  await router.replace({ name: 'login' });
+};
 
 onMounted(async () => {
   if (authStore.refreshToken && !authStore.user) {
@@ -174,9 +155,19 @@ onMounted(async () => {
                 </div>
 
                 <div class="ml-auto flex items-center gap-2">
-                  <Button type="button" variant="secondary" @click="handleLogout">
-                    <PowerOff class="h-4 w-4 text-destructive" />
-                  </Button>
+                  <DialogToggle
+                    title="Deseja sair da sua conta?"
+                    description="Ao sair, será necessário fazer login novamente para acessar sua conta."
+                    confirmText="Sair"
+                    cancelText="Manter Sessão"
+                    @confirm="handleLogout"
+                  >
+                    <template #trigger>
+                      <Button variant="secondary">
+                        <PowerOff class="h-4 w-4 text-destructive" />
+                      </Button>
+                    </template>
+                  </DialogToggle>
 
                   <Button type="button" variant="secondary" @click="handleSessionRestore()">
                     <Power class="h-4 w-4 text-primary" />
