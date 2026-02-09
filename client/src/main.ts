@@ -6,7 +6,7 @@ import { createPinia } from 'pinia';
 
 import App from './App.vue';
 import router from './router';
-import { useAuthStore } from './stores/auth.store';
+import { useAuthStore } from './stores/auth/auth.store';
 import './style.css';
 
 const pinia = createPinia();

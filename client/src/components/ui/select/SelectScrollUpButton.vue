@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import type { SelectScrollUpButtonProps } from "reka-ui"
-import type { HTMLAttributes } from "vue"
-import { reactiveOmit } from "@vueuse/core"
-import { ChevronUp } from "lucide-vue-next"
-import { SelectScrollUpButton, useForwardProps } from "reka-ui"
-import { cn } from "@/lib/utils"
+import { reactiveOmit } from '@vueuse/core';
 
-const props = defineProps<SelectScrollUpButtonProps & { class?: HTMLAttributes["class"] }>()
+import type { HTMLAttributes } from 'vue';
 
-const delegatedProps = reactiveOmit(props, "class")
+import { ChevronUp } from 'lucide-vue-next';
+import type { SelectScrollUpButtonProps } from 'reka-ui';
+import { SelectScrollUpButton, useForwardProps } from 'reka-ui';
 
-const forwardedProps = useForwardProps(delegatedProps)
+import { cn } from '@/lib/classname.util';
+
+const props = defineProps<SelectScrollUpButtonProps & { class?: HTMLAttributes['class'] }>();
+
+const delegatedProps = reactiveOmit(props, 'class');
+
+const forwardedProps = useForwardProps(delegatedProps);
 </script>
 
 <template>

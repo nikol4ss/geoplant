@@ -2,45 +2,9 @@ import { h } from 'vue';
 
 import { toast } from 'vue-sonner';
 
-type AxiosErrorLike = {
-  response?: {
-    data?: any;
-  };
-};
+import type { ToastPromiseMessages } from '@/types/toast.type';
 
-function isAxiosError(err: unknown): err is AxiosErrorLike {
-  return typeof err === 'object' && err !== null && 'response' in err;
-}
-
-type ToastPromiseMessages<T = any> = {
-  loading?: string;
-  success?: string | ((data: T) => string | { message: string; advice?: string });
-  error?: string | ((err: unknown) => string | string[] | { message: string; advice?: string });
-};
-
-export function parseApiError(err: unknown): string[] {
-  if (isAxiosError(err)) {
-    const { data } = err.response ?? {};
-    const output: string[] = [];
-
-    if (Array.isArray(data?.errors) && data.errors.length > 0) {
-      data.errors.forEach((e: any) => {
-        output.push(`${e.message}\nCampos inválidos. Tente novamente.`);
-      });
-      return output;
-    }
-
-    if (data?.message) {
-      output.push(`${data.message}${data.advice ? `\n${data.advice}` : ''}`);
-      return output;
-    }
-
-    return ['Erro inesperado'];
-  }
-
-  if (err instanceof Error) return [err.message];
-  return ['Erro inesperado'];
-}
+import { parseApiError } from '@/utils/parseApiError.util';
 
 function toastError(message: string) {
   toast.error({
@@ -98,6 +62,7 @@ export const Toast = {
 
       if (typeof messages.success === 'function') {
         const result = messages.success(data);
+
         if (typeof result === 'string') {
           const parts = result.split('\n');
           successMessage = parts[0] || 'Sucesso';

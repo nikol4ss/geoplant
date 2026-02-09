@@ -7,7 +7,7 @@ const routes = [
   },
   {
     path: '/auth/login',
-    component: () => import('./pages/Login.vue'),
+    component: () => import('./pages/auth/Login.vue'),
     meta: {
       public: true,
       title: 'GeoPlant - Logar'
@@ -15,7 +15,7 @@ const routes = [
   },
   {
     path: '/auth/signup',
-    component: () => import('./pages/Signup.vue'),
+    component: () => import('./pages/auth/Signup.vue'),
     meta: {
       public: true,
       title: 'GeoPlant - Cadastrar'

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { loginUser } from '@/api/modules/auth/auth.api';
-import type { LoginPayload } from '@/models/modules/auth/auth.model';
+import { authenticateUser } from '@/api/modules/auth/auth.api';
+import type { LoginPayload } from '@/models/modules/auth/auth.dto';
 import router from '@/router';
 
 import { type HTMLAttributes, onMounted, ref } from 'vue';
@@ -20,29 +20,30 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 
-import { useAuthStore } from '@/stores/auth.store';
+import { useAuthStore } from '@/stores/auth/auth.store';
 
-import { Toast, parseApiError } from '@/lib/toast.util';
-import { cn, delay } from '@/lib/utils';
+import { cn } from '@/lib/classname.util';
+import { Toast } from '@/lib/toast.util';
+
+import { delay } from '@/utils/delay.util';
+import { parseApiError } from '@/utils/parseApiError.util';
 
 import PasswordInput from '../tooltip/PasswordInput.vue';
+
+const authStore = useAuthStore();
 
 const props = defineProps<{
   class?: HTMLAttributes['class'];
 }>();
 
+const loading = ref(false);
+const error = ref<string | null>(null);
 const form = ref<LoginPayload>({
   email: '',
   password: '',
 });
 
-// TODO: melhora funções e reatividade do estado
-const authStore = useAuthStore();
-
-const loading = ref(false);
-const error = ref<string | null>(null);
-
-const submitLogin = async () => {
+const handleLoginSubmit = async () => {
   loading.value = true;
   error.value = null;
 
@@ -51,7 +52,7 @@ const submitLogin = async () => {
   try {
     await delay(500);
 
-    const response = await loginUser(form.value);
+    const response = await authenticateUser(form.value);
 
     if (!response.success || !response.data) {
       throw new Error(response.message || 'Erro inesperado');
@@ -77,7 +78,7 @@ const submitLogin = async () => {
   }
 };
 
-const submitLoginRefresh = async () => {
+const handleSessionRestore = async () => {
   if (!authStore.refreshToken) {
     Toast.error('Não há refresh token disponível.');
     return;
@@ -123,7 +124,7 @@ onMounted(async () => {
   <div :class="cn('flex flex-col gap-6', props.class)">
     <Card class="overflow-hidden p-0 rounded-lg">
       <CardContent class="grid p-0 md:grid-cols-2">
-        <form class="p-6 md:p-8" @submit.prevent="submitLogin">
+        <form class="p-6 md:p-8" @submit.prevent="handleLoginSubmit()">
           <FieldGroup>
             <div class="flex flex-col items-center gap-2 text-center">
               <h1 class="text-2xl font-bold">
@@ -177,7 +178,7 @@ onMounted(async () => {
                     <PowerOff class="h-4 w-4 text-destructive" />
                   </Button>
 
-                  <Button type="button" variant="secondary" @click="submitLoginRefresh">
+                  <Button type="button" variant="secondary" @click="handleSessionRestore()">
                     <Power class="h-4 w-4 text-primary" />
                   </Button>
                 </div>

@@ -20,7 +20,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 
-import { useAuthStore } from '@/stores/auth.store';
+import { useAuthStore } from '@/stores/auth/auth.store';
 
 const props = defineProps<{
   user: {

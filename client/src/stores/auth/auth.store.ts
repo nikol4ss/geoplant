@@ -1,5 +1,5 @@
-import { loginUser, refreshUser } from '@/api/modules/auth/auth.api';
-import type { LoginPayload } from '@/models/modules/auth/auth.model';
+import { authenticateUser, refreshUser } from '@/api/modules/auth/auth.api';
+import type { LoginPayload } from '@/models/modules/auth/auth.dto';
 
 import { defineStore } from 'pinia';
 
@@ -82,7 +82,7 @@ export const useAuthStore = defineStore('auth', {
      * Atualiza tokens e dados do usuário no estado e localStorage.
      */
     async login(payload: LoginPayload) {
-      const response = await loginUser(payload);
+      const response = await authenticateUser(payload);
 
       if (!response.success || !response.data) {
         throw new Error(response.message || 'Erro inesperado');

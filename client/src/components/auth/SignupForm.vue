@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { createUser } from '@/api/modules/auth/auth.api';
-import type { SignupPayload } from '@/models/modules/auth/auth.model';
+import type { SignupPayload } from '@/models/modules/auth/auth.dto';
 
 import { type HTMLAttributes, watch } from 'vue';
 import { ref } from 'vue';
@@ -30,8 +30,11 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-import { Toast, parseApiError } from '@/lib/toast.util';
-import { cn, delay } from '@/lib/utils';
+import { cn } from '@/lib/classname.util';
+import { Toast } from '@/lib/toast.util';
+
+import { delay } from '@/utils/delay.util';
+import { parseApiError } from '@/utils/parseApiError.util';
 
 import PasswordInput from '../tooltip/PasswordInput.vue';
 
