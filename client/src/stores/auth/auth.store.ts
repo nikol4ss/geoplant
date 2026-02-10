@@ -3,121 +3,104 @@ import type { LoginPayload } from '@/models/modules/auth/auth.dto';
 
 import { defineStore } from 'pinia';
 
-/**
- * Auth Store
- * Responsável por gerenciar o estado de autenticação do usuário.
- * Guarda tokens, dados do usuário e fornece métodos para login, logout e refresh.
- */
-export const useAuthStore = defineStore('auth', {
-  /**
-   * State
-   * Armazena os tokens e dados do usuário.
-   * - accessToken: Token de acesso para autenticação.
-   * - refreshToken: Token para renovar o accessToken.
-   * - user: Objeto com dados do usuário (id, name, surname, email) ou null.
-   * Observação: Os valores iniciais são carregados do localStorage se existirem.
-   */
-  state: () => ({
-    accessToken: localStorage.getItem('accessToken') || '',
-    refreshToken: localStorage.getItem('refreshToken') || '',
-    user: JSON.parse(localStorage.getItem('user') || 'null') as null | {
-      id: number;
-      name: string;
-      surname: string;
-      email: string;
-    },
-  }),
+import type { Session, User } from '@/types/auth.type';
 
-  /**
-   * Getters
-   * Funções que derivam dados do estado.
-   */
-  getters: {
-    // Retorna true se o usuário estiver logado (ou seja, existir accessToken)
-    isLoggedIn: (state) => !!state.accessToken,
+const STORAGE_KEY = 'auth_session';
+
+function loadSession(): Session | null {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  return raw ? (JSON.parse(raw) as Session) : null;
+}
+
+function persistSession(session: Session | null) {
+  if (!session) {
+    localStorage.removeItem(STORAGE_KEY);
+    return;
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+}
+
+export const useAuthStore = defineStore('auth', {
+  state: () => {
+    const session = loadSession();
+
+    return {
+      accessToken: session?.accessToken ?? (null as string | null),
+      refreshToken: session?.refreshToken ?? (null as string | null),
+      user: session?.user ?? (null as User | null),
+      isRefreshing: false,
+    };
   },
 
-  /**
-   * Actions
-   * Métodos para manipular o estado: login, logout, refresh e gerenciamento de tokens.
-   */
+  getters: {
+    isLoggedIn: (state) => state.user !== null && state.accessToken !== null,
+  },
+
   actions: {
-    /**
-     * setTokens
-     * Salva os tokens no estado e no localStorage.
-     * Opcionalmente, recebe o objeto `user` para salvar também.
-     */
-    setTokens(
-      access: string,
-      refresh: string,
-      user?: { id: number; name: string; surname: string; email: string },
-    ) {
-      this.accessToken = access;
-      this.refreshToken = refresh;
-      localStorage.setItem('accessToken', access);
-      localStorage.setItem('refreshToken', refresh);
-
-      if (user) {
-        this.user = user;
-        localStorage.setItem('user', JSON.stringify(user));
+    setSession(session: Session | null) {
+      if (!session) {
+        this.accessToken = null;
+        this.refreshToken = null;
+        this.user = null;
+        persistSession(null);
+        return;
       }
+
+      this.accessToken = session.accessToken;
+      this.refreshToken = session.refreshToken;
+      this.user = session.user;
+
+      persistSession(session);
     },
 
-    /**
-     * logout
-     * Limpa tokens e dados do usuário, removendo também do localStorage.
-     */
     logout() {
-      this.accessToken = '';
-      this.refreshToken = '';
-      this.user = null;
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
+      this.setSession(null);
     },
 
-    /**
-     * login
-     * Realiza login usando email e senha (LoginPayload).
-     * Atualiza tokens e dados do usuário no estado e localStorage.
-     */
     async login(payload: LoginPayload) {
+      this.logout(); 
+
       const response = await authenticateUser(payload);
 
       if (!response.success || !response.data) {
-        throw new Error(response.message || 'Erro inesperado');
+        throw new Error(response.message || 'Falha no login');
       }
 
-      const { accessToken, refreshToken, user } = response.data;
-
-      // Salva tokens e user no estado/localStorage
-      this.setTokens(accessToken, refreshToken, user);
-
+      this.setSession(response.data);
       return response.data;
     },
 
-    /**
-     * refresh
-     * Renova o accessToken usando o refreshToken.
-     * Atualiza accessToken e user no estado e localStorage.
-     */
     async refresh() {
-      if (!this.refreshToken) throw new Error('Refresh token ausente');
-
-      const response = await refreshUser({ refreshToken: this.refreshToken });
-
-      if (!response.success || !response.data) {
-        throw new Error(response.message || 'Erro ao atualizar token');
+      if (!this.refreshToken) {
+        this.logout();
+        throw new Error('Refresh token ausente');
       }
 
-      const { accessToken, user } = response.data;
+      if (this.isRefreshing) return this.accessToken;
+      this.isRefreshing = true;
 
-      this.accessToken = accessToken;
-      this.user = user;
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('user', JSON.stringify(user));
+      try {
+        const response = await refreshUser({
+          refreshToken: this.refreshToken,
+        });
 
-      return accessToken;
+        if (!response.success || !response.data) {
+          throw new Error('Falha ao renovar sessão');
+        }
+
+        this.setSession({
+          accessToken: response.data.accessToken,
+          refreshToken: response.data.refreshToken ?? this.refreshToken,
+          user: response.data.user,
+        });
+
+        return this.accessToken;
+      } catch (error) {
+        this.logout();
+        throw error;
+      } finally {
+        this.isRefreshing = false;
+      }
     },
   },
 });

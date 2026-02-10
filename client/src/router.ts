@@ -12,6 +12,7 @@ const routes = [
     component: () => import('./pages/auth/Login.vue'),
     meta: {
       public: true,
+      allowWhenLogged: true,
       title: 'GeoPlant - Logar',
     },
   },

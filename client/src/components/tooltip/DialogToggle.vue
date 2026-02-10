@@ -33,8 +33,8 @@ const emit = defineEmits<{
 
     <DialogContent>
       <DialogHeader>
-        <DialogTitle >{{ props.title }}</DialogTitle>
-        <Separator class="my-2"/>
+        <DialogTitle>{{ props.title }}</DialogTitle>
+        <Separator class="mt-2" />
         <DialogDescription>{{ props.description }}</DialogDescription>
       </DialogHeader>
 

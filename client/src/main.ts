@@ -1,7 +1,5 @@
 import { createApp } from 'vue';
 
-import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router';
-
 import { createPinia } from 'pinia';
 
 import App from './App.vue';
@@ -14,17 +12,30 @@ const app = createApp(App);
 app.use(pinia);
 app.use(router);
 
-router.beforeEach(
-  (to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
-    const authStore = useAuthStore();
-    document.title = (to.meta?.title as string) || 'GeoPlant';
+router.beforeEach(async (to, _from, next) => {
+  const authStore = useAuthStore();
 
-    if (to.meta.requiresAuth && !authStore.isLoggedIn) {
-      return next('/auth/login');
+  document.title = (to.meta?.title as string) || 'GeoPlant';
+
+  if (to.meta.requiresAuth) {
+    if (authStore.isLoggedIn) {
+      return next();
     }
 
-    next();
-  },
-);
+    try {
+      await authStore.refresh();
+      return authStore.isLoggedIn ? next() : next('/auth/login');
+    } catch {
+      authStore.logout();
+      return next('/auth/login');
+    }
+  }
+
+  if (authStore.isLoggedIn && !to.meta.allowWhenLogged) {
+    return next('/atlas');
+  }
+
+  next();
+});
 
 app.mount('#app');

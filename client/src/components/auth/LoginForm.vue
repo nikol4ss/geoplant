@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { authenticateUser } from '@/api/modules/auth/auth.api';
 import type { LoginPayload } from '@/models/modules/auth/auth.dto';
 import router from '@/router';
 
-import { type HTMLAttributes, onMounted, ref } from 'vue';
+import { type HTMLAttributes, ref } from 'vue';
 
 import { Power, PowerOff } from 'lucide-vue-next';
 
@@ -46,22 +45,17 @@ const handleLoginSubmit = async () => {
   loading.value = true;
 
   try {
-    const data = await Toast.promise(
-      authenticateUser(form.value).then((response) => {
-        if (!response.success) throw response;
-        return response.data;
-      }),
-      {
-        loading: 'Acessando sua conta',
-        success: 'Login Realizado \n Seja bem-vindo.',
-        error: (err) => parseApiError(err),
-      },
-    );
+    await Toast.promise(authStore.login(form.value), {
+      loading: 'Acessando sua conta',
+      success: 'Login realizado. Bem-vindo.',
+      error: (err) => parseApiError(err),
+    });
 
-    const { accessToken, refreshToken, user } = data;
-    authStore.setTokens(accessToken, refreshToken, user);
+    if (!authStore.isLoggedIn) {
+      throw new Error('Sessão inválida após login');
+    }
 
-    await router.push({ name: 'atlas' });
+    await router.replace({ name: 'atlas' });
   } finally {
     loading.value = false;
   }
@@ -77,7 +71,7 @@ const handleSessionRestore = async () => {
       error: (err) => parseApiError(err),
     });
 
-    await router.push({ name: 'atlas' });
+    await router.replace({ name: 'atlas' });
   } catch {
     authStore.logout();
   } finally {
@@ -87,18 +81,9 @@ const handleSessionRestore = async () => {
 
 const handleLogout = async () => {
   authStore.logout();
+  Toast.warning('Sessão encerrada.');
   await router.replace({ name: 'login' });
 };
-
-onMounted(async () => {
-  if (authStore.refreshToken && !authStore.user) {
-    try {
-      await authStore.refresh();
-    } catch {
-      authStore.logout();
-    }
-  }
-});
 </script>
 
 <template>
@@ -160,7 +145,7 @@ onMounted(async () => {
                   <DialogToggle
                     title="Deseja sair da sua conta?"
                     description="Ao sair, será necessário fazer login novamente para acessar sua conta."
-                    confirmText="Sair"
+                    confirmText="Deslogar"
                     cancelText="Manter Sessão"
                     @confirm="handleLogout"
                   >
