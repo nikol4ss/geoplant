@@ -1,13 +1,10 @@
 <script setup lang="ts">
 import { createUser } from '@/api/modules/auth/auth.api';
 import type { SignupPayload } from '@/models/modules/auth/auth.dto';
+import router from '@/router';
 
 import { type HTMLAttributes, watch } from 'vue';
 import { ref } from 'vue';
-
-import { useRouter } from 'vue-router';
-
-import { toast } from 'vue-sonner';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -33,20 +30,15 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/classname.util';
 import { Toast } from '@/lib/toast.util';
 
-import { delay } from '@/utils/delay.util';
 import { parseApiError } from '@/utils/parseApiError.util';
 
 import PasswordInput from '../tooltip/PasswordInput.vue';
-
-const router = useRouter();
 
 const props = defineProps<{
   class?: HTMLAttributes['class'];
 }>();
 
 const loading = ref(false);
-const error = ref<string | null>(null);
-
 const form = ref<SignupPayload>({
   name: '',
   surname: '',
@@ -57,30 +49,23 @@ const form = ref<SignupPayload>({
   occupation: undefined,
 });
 
-const submitSignup = async () => {
+const handleSignupSubmit = async () => {
   loading.value = true;
-  error.value = null;
-
-  const loadingId = toast.loading('Criando sua conta. Aguarde um momento.');
 
   try {
-    await delay(1000);
-    await createUser(form.value);
-
-    toast.dismiss(loadingId);
-    router.push('/atlas'); // para test(finalizar jwt)
-
-    await delay(200);
-
-    Toast.success(
-      'Conta criada com sucesso.',
-      `${form.value.name} ${form.value.surname}, seja bem-vindo.`,
+    await Toast.promise(
+      createUser(form.value).then((response) => {
+        if (!response.success) throw response;
+        return response.data;
+      }),
+      {
+        loading: 'Criando Conta',
+        success: `Conta criada com sucesso \n ${form.value.name} ${form.value.surname} será ativado após o login.`,
+        error: (err) => parseApiError(err),
+      },
     );
-  } catch (err: unknown) {
-    toast.dismiss(loadingId);
 
-    error.value = parseApiError(err)[0] ?? 'Erro inesperado';
-    Toast.error(parseApiError(err));
+    await router.push({ name: 'login' });
   } finally {
     loading.value = false;
   }
@@ -100,7 +85,7 @@ watch(
   <div :class="cn('flex flex-col gap-6', props.class)">
     <Card class="overflow-hidden p-0 rounded-lg">
       <CardContent class="grid p-0 md:grid-cols-2">
-        <form class="p-6 md:p-8" @submit.prevent="submitSignup">
+        <form class="p-6 md:p-8" @submit.prevent="handleSignupSubmit">
           <FieldGroup>
             <header class="flex flex-col items-center gap-2 text-center">
               <h1 class="text-2xl font-bold">

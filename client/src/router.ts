@@ -5,6 +5,7 @@ const routes = [
     path: '/',
     redirect: '/auth/login',
   },
+
   {
     path: '/auth/login',
     name: 'login',
@@ -14,10 +15,11 @@ const routes = [
       title: 'GeoPlant - Logar',
     },
   },
+
   {
     path: '/auth/signup',
     name: 'signup',
-    component: () => import('./pages/auth/Signup.vue'),
+    component: () => import('@/pages/auth/Signup.vue'),
     meta: {
       public: true,
       title: 'GeoPlant - Cadastrar',

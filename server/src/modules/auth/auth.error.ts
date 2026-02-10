@@ -89,7 +89,7 @@ export const AuthErrors = {
         code: 'PRISMA_UNIQUE_CONSTRAINT',
         statusCode: 409,
         message: 'Registro já existente',
-        advice: 'Os dados informados violam uma regra de unicidade.',
+        advice: 'Os dados violam uma regra de unicidade.',
       }),
 
     FOREIGN_KEY_CONFLICT: () =>

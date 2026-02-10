@@ -24,6 +24,7 @@ import { useAuthStore } from '@/stores/auth/auth.store';
 import { cn } from '@/lib/classname.util';
 import { Toast } from '@/lib/toast.util';
 
+import { abbreviatedName } from '@/utils/abbreviatedName.util';
 import { parseApiError } from '@/utils/parseApiError.util';
 
 import DialogToggle from '../tooltip/DialogToggle.vue';
@@ -72,8 +73,7 @@ const handleSessionRestore = async () => {
   try {
     await Toast.promise(authStore.refresh(), {
       loading: 'Conectando à sua conta',
-      success: `Sessão Reconectada \n
-      Bem-vindo de volta, ${authStore.user?.name || ''} ${authStore.user?.surname || ''}.`,
+      success: `Sessão Reconectada \n Bem-vindo de volta, ${authStore.user?.name || ''} ${authStore.user?.surname || ''}.`,
       error: (err) => parseApiError(err),
     });
 
@@ -144,7 +144,9 @@ onMounted(async () => {
             <Field v-if="authStore.user">
               <div class="flex items-center gap-3 border p-4 rounded-lg">
                 <Avatar class="h-8 w-8 rounded-lg">
-                  <AvatarFallback class="rounded-lg">NK</AvatarFallback>
+                  <AvatarFallback class="rounded-lg">{{
+                    abbreviatedName(authStore.user?.name, authStore.user?.surname)
+                  }}</AvatarFallback>
                 </Avatar>
 
                 <div class="flex flex-col text-left text-sm leading-tight">
@@ -163,13 +165,13 @@ onMounted(async () => {
                     @confirm="handleLogout"
                   >
                     <template #trigger>
-                      <Button variant="secondary">
+                      <Button variant="outline">
                         <PowerOff class="h-4 w-4 text-destructive" />
                       </Button>
                     </template>
                   </DialogToggle>
 
-                  <Button type="button" variant="secondary" @click="handleSessionRestore()">
+                  <Button type="button" variant="outline" @click="handleSessionRestore()">
                     <Power class="h-4 w-4 text-primary" />
                   </Button>
                 </div>
@@ -181,7 +183,7 @@ onMounted(async () => {
             </FieldSeparator>
 
             <FieldDescription class="text-center">
-              <RouterLink to="/auth/signup"> Criar uma Conta </RouterLink>
+              <RouterLink :to="{ name: 'signup' }">Criar uma Conta</RouterLink>
             </FieldDescription>
           </FieldGroup>
         </form>

@@ -30,6 +30,14 @@ export const authService = (app: FastifyInstance) => ({
     const email = data.email.toLowerCase();
     const hashed = await hashPassword(data.password);
 
+    const existingUser = await prisma.user.findUnique({
+      where: { email: data.email.toLowerCase() },
+    });
+
+    if (existingUser) {
+      throw AuthErrors.Auth.USER_EXISTING();
+    }
+
     try {
       const user = await prisma.user.create({
         data: {
