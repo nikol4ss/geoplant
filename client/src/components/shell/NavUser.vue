@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { onMounted } from 'vue';
+
 import { useRouter } from 'vue-router';
 
 import { Bolt, ChevronsUpDown, LogOut, User } from 'lucide-vue-next';
@@ -45,6 +47,14 @@ const handleLogout = async () => {
   Toast.warning('Sessão encerrada');
   await router.replace({ name: 'login' });
 };
+
+onMounted(async () => {
+  if (authStore.refreshToken && !authStore.user) {
+    try {
+      await authStore.refresh();
+    } catch {}
+  }
+});
 </script>
 
 <template>
@@ -64,7 +74,7 @@ const handleLogout = async () => {
             </Avatar>
             <div class="grid flex-1 text-left text-sm leading-tight">
               <span class="truncate font-medium"
-              >{{ authStore.user?.name }} {{ authStore.user?.surname }}</span
+                >{{ authStore.user?.name }} {{ authStore.user?.surname }}</span
               >
               <span class="truncate text-xs text-muted-foreground">
                 {{
