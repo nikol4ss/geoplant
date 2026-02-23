@@ -3,8 +3,7 @@ import { createUser } from '@/api/modules/auth/auth.api';
 import type { SignupPayload } from '@/models/modules/auth/auth.dto';
 import router from '@/router';
 
-import { type HTMLAttributes, watch } from 'vue';
-import { ref } from 'vue';
+import { type HTMLAttributes, ref, watch } from 'vue';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';

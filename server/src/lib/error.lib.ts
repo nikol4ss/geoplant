@@ -30,9 +30,13 @@ export class AppError extends Error {
   }
 }
 
-export const createError = (code: string, options: { statusCode: number; message: string | ((...args: any[]) => string); advice?: string }) => {
+export const createError = (
+  code: string,
+  options: { statusCode: number; message: string | ((...args: any[]) => string); advice?: string },
+) => {
   return (...args: any[]) => {
-    const message = typeof options.message === 'function' ? options.message(...args) : options.message;
+    const message =
+      typeof options.message === 'function' ? options.message(...args) : options.message;
     return new AppError({
       code,
       statusCode: options.statusCode,

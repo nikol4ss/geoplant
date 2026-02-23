@@ -1,12 +1,10 @@
 import { AuthErrors } from './auth.error.js';
-import { type JwtPayload, Organization, UserCreate } from './auth.schema.js';
+import { type JwtPayload, UserCreate } from './auth.schema.js';
 import { Prisma } from '@/generated/prisma/client.js';
 import { AppError } from '@/lib/error.lib.js';
 import { prisma } from '@/lib/prisma.lib.js';
 
 import type { FastifyInstance } from 'fastify';
-
-import { _jwt } from 'zod/v4/core';
 
 import { comparePassword, hashPassword } from '@/utils/hashed.util.js';
 
@@ -103,7 +101,7 @@ export const authService = (app: FastifyInstance) => ({
       if (err instanceof Prisma.PrismaClientValidationError) {
         throw AuthErrors.Prisma.CONSTRAINT_VIOLATION();
       }
-      throw AuthErrors.Auth.CREATE_USER_FAILED();
+      throw AuthErrors.Auth.AUTHENTICATION_FAILED();
     }
 
     if (!user) throw AuthErrors.Auth.INVALID_CREDENTIALS();

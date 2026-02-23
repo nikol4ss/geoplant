@@ -81,8 +81,15 @@ export const AuthErrors = {
         message: 'Erro ao criar usuário',
         advice: 'Tente novamente mais tarde.',
       }),
-  },
 
+    AUTHENTICATION_FAILED: () =>
+      new AppError({
+        code: 'AUTHENTICATION_FAILED',
+        statusCode: 401,
+        message: 'Falha na autenticação.',
+        advice: 'Tente novamente.',
+      }),
+  },
   Prisma: {
     UNIQUE_CONSTRAINT: () =>
       new AppError({

@@ -21,7 +21,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "ignoreDeprecations": "6.0",
+    "ignoreDeprecations": "5.0",
     "incremental": true,
     "pretty": false
   },
@@ -29,5 +29,3 @@
   "include": ["src", "prisma"],
   "exclude": ["node_modules", "dist"]
 }
-
-
